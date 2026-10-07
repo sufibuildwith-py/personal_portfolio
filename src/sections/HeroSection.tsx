@@ -212,12 +212,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenContact }) => {
 
         {/* =========================================================================
             DESKTOP COMPOSITION (>= 1024px — All PC laptops and monitors)
-            Controlled max-width composition container (1400–1500px)
-            Safe visual margins on both sides, safe vertical zones
+            Controlled max-width composition container (up to 1720px for wide displays)
+            Safe visual margins on both sides, intentional editorial hierarchy
             ========================================================================= */}
-        <div className="hidden lg:flex relative flex-1 w-full max-w-[1460px] mx-auto px-6 sm:px-10 lg:px-12 flex-col justify-between overflow-hidden">
-          {/* TOP ZONE: Metadata with 10–15% improved editorial legibility */}
-          <div className="relative z-30 w-full pt-4 flex items-center justify-between font-mono text-xs sm:text-[12px] tracking-[0.14em] text-[#57534E]">
+        <div className="hidden lg:flex relative flex-1 w-full max-w-[1720px] mx-auto px-6 sm:px-8 lg:px-10 xl:px-14 flex-col justify-start overflow-hidden">
+          {/* TOP ZONE: Metadata with clear architectural labels */}
+          <div className="relative z-30 w-full pt-2 xl:pt-4 flex items-center justify-between font-mono text-xs sm:text-[12px] tracking-[0.14em] text-[#57534E]">
             <div className="flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
               <span>ESTD. 2026 · KANPUR, INDIA</span>
@@ -231,43 +231,44 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenContact }) => {
             </div>
           </div>
 
-          {/* CENTERPIECE: UNIFIED HORIZONTAL BRAND LOCKUP (LAPTOP CARE ARCHITECTURE)
-              - Mathematically centered aperture at exactly 50% screen width
-              - SUFIYAN right-aligned in left half, KHAN left-aligned in right half
-              - Sufiyan's portrait floats dead center in front (z-20)
-              - Optical pose compensation (translate-x) centers chest over the aperture
-              - Symmetrically overlaps ~20-25px of N and ~20-25px of K
-              - Exactly mirrors the reference layout in media_1791396899632.png */}
-          <div className="relative w-full flex items-center justify-center select-none pt-0 pb-4 xl:pb-8 my-auto -translate-y-12 xl:-translate-y-16">
+          {/* UPPER-MIDDLE ZONE: SUFIYAN KHAN MASTHEAD + INTERSECTING PORTRAIT
+              - Placed in the upper-middle portion beneath the metadata
+              - SUFIYAN pushed farther LEFT into the green guide box
+              - KHAN pushed farther RIGHT into the green guide box
+              - Portrait head rises naturally above the letters matching green arch
+              - Portrait body enlarged and extends all the way down matching green contour */}
+          <div className="relative w-full flex items-center justify-center select-none mt-4 sm:mt-6 xl:mt-8">
             {/* The Unified Typographic Line with 50% Split */}
             <div className="w-full flex items-center justify-center leading-none select-none">
-              {/* Left Word: SUFIYAN (Right-aligned to 50% centerline with calibrated padding) */}
-              <div className="flex-1 flex justify-end pr-[62px] lg:pr-[70px] xl:pr-[78px]">
+              {/* Left Word: SUFIYAN (Pushed outward to the left into green box) */}
+              <div className="flex-1 flex justify-end pr-[115px] lg:pr-[135px] xl:pr-[155px]">
                 <motion.span
                   initial={{ opacity: 0, x: -30 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.85, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                  className="text-[clamp(3.8rem,7vw,8rem)] font-black uppercase tracking-tight text-[#171615] select-none leading-none z-10"
+                  className="text-[clamp(4.6rem,8.2vw,9.6rem)] font-black uppercase tracking-tight text-[#171615] select-none leading-none z-10"
                 >
                   SUFIYAN
                 </motion.span>
               </div>
 
-              {/* Right Word: KHAN (Left-aligned from 50% centerline with calibrated padding) */}
-              <div className="flex-1 flex justify-start pl-[55px] lg:pl-[64px] xl:pl-[72px]">
+              {/* Right Word: KHAN (Pushed outward to the right into green box) */}
+              <div className="flex-1 flex justify-start pl-[135px] lg:pl-[155px] xl:pl-[175px]">
                 <motion.span
                   initial={{ opacity: 0, x: 30 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.85, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                  className="text-[clamp(3.8rem,7vw,8rem)] font-black uppercase tracking-tight text-[#171615] select-none leading-none z-10"
+                  className="text-[clamp(4.6rem,8.2vw,9.6rem)] font-black uppercase tracking-tight text-[#171615] select-none leading-none z-10"
                 >
                   KHAN
                 </motion.span>
               </div>
             </div>
 
-            {/* The Floating Image Overlay (Centered with absolute inset-0 flex items-center justify-center) */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+            {/* The Floating Image Overlay
+                - Head rises into the aperture above letters matching green outline
+                - Portrait body enlarged and extends downward to bottom scroll indicator */}
+            <div className="absolute top-[-25px] xl:top-[-35px] left-1/2 -translate-x-1/2 flex items-center justify-center pointer-events-none z-20">
               <motion.div
                 style={{
                   scale: subjectScale,
@@ -282,7 +283,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenContact }) => {
                 initial={{ opacity: 0, scale: 0.92 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.9, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                className="pointer-events-auto flex items-center justify-center cursor-grab active:cursor-grabbing translate-x-[22px] lg:translate-x-[25px] translate-y-[8px] xl:translate-y-[12px]"
+                className="pointer-events-auto flex items-center justify-center cursor-grab active:cursor-grabbing translate-x-[26px] lg:translate-x-[30px]"
               >
                 {/* Interactive Ambient Float Container */}
                 <motion.div
@@ -296,15 +297,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenContact }) => {
                   }}
                   className="relative flex items-center justify-center will-change-transform"
                 >
-                  {/* Subtle ground contact shadow */}
-                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-48 h-5 bg-[#171615]/20 rounded-full blur-lg pointer-events-none" />
+                  {/* Ground contact ambient shadow */}
+                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-72 h-6 bg-[#171615]/20 rounded-full blur-xl pointer-events-none" />
 
                   <picture>
                     <source srcSet="/sufiyan-cutout.webp" type="image/webp" />
                     <img
                       src="/sufiyan-cutout.png"
                       alt="Sufiyan Khan — Forward-Deployed Engineering"
-                      className="h-[48vh] xl:h-[52vh] max-h-[480px] min-h-[400px] w-auto object-contain drop-shadow-[0_20px_35px_rgba(23,22,21,0.22)] select-none pointer-events-none"
+                      className="h-[80vh] xl:h-[85vh] max-h-[820px] min-h-[640px] w-auto object-contain drop-shadow-[0_25px_45px_rgba(23,22,21,0.24)] select-none pointer-events-none"
                       loading="eager"
                       decoding="async"
                       draggable={false}
@@ -315,16 +316,16 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenContact }) => {
             </div>
           </div>
 
-          {/* BOTTOM ZONE: Left Thesis Column + Right Proof Highlights Column */}
-          {/* Left Column: Thesis & Actions (Sits cleanly below SUFIYAN with generous breathing room) */}
+          {/* LOWER ZONE: Left Thesis Column + Right Proof Highlights Column */}
+          {/* Left Column: Thesis & Actions (Anchored farther left near editorial margin) */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.85, delay: 0.45, ease: [0.16, 1, 0.3, 1] }}
             style={{
-              bottom: 'clamp(3.25rem, 4.8vh, 5.25rem)',
-              left: 'clamp(1.5rem, 3.5vw, 4.5rem)',
-              width: 'min(330px, 24vw)',
+              bottom: 'clamp(3.5rem, 5.5vh, 6rem)',
+              left: 'clamp(1.5rem, 4vw, 4rem)',
+              width: 'min(350px, 25vw)',
             }}
             className="absolute z-30 text-left flex flex-col items-start gap-2.5"
           >
@@ -361,15 +362,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenContact }) => {
             </div>
           </motion.div>
 
-          {/* Right Column: Production Highlights */}
+          {/* Right Column: Production Highlights (Anchored farther right near editorial margin) */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.85, delay: 0.55, ease: [0.16, 1, 0.3, 1] }}
             style={{
-              bottom: 'clamp(3.25rem, 4.8vh, 5.25rem)',
-              right: 'clamp(1.5rem, 3.5vw, 4.5rem)',
-              width: 'min(300px, 22vw)',
+              bottom: 'clamp(3.5rem, 5.5vh, 6rem)',
+              right: 'clamp(1.5rem, 4vw, 4rem)',
+              width: 'min(310px, 22vw)',
             }}
             className="absolute z-30 flex flex-col items-end text-right gap-2 font-mono"
           >
@@ -404,8 +405,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenContact }) => {
           <div
             style={{
               bottom: 'clamp(1rem, 2vh, 1.75rem)',
-              left: 'clamp(1.5rem, 3.5vw, 3.5rem)',
-              right: 'clamp(1.5rem, 3.5vw, 3.5rem)',
+              left: 'clamp(1.5rem, 4vw, 4rem)',
+              right: 'clamp(1.5rem, 4vw, 4rem)',
             }}
             className="absolute z-30 flex items-center justify-between text-xs font-mono text-[#6E6A64]"
           >
