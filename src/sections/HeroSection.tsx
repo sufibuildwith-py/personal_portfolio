@@ -216,13 +216,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenContact }) => {
             Safe visual margins on both sides, safe vertical zones
             ========================================================================= */}
         <div className="hidden xl:flex relative flex-1 w-full max-w-[1460px] mx-auto px-6 sm:px-10 lg:px-12 flex-col justify-between overflow-hidden">
-          {/* TOP ZONE: Metadata within safe margins */}
-          <div className="relative z-30 w-full pt-4 flex items-center justify-between font-mono text-[11px] text-[#6E6A64]">
+          {/* TOP ZONE: Metadata with 10–15% improved editorial legibility */}
+          <div className="relative z-30 w-full pt-4 flex items-center justify-between font-mono text-xs sm:text-[12px] tracking-[0.14em] text-[#57534E]">
             <div className="flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
               <span>ESTD. 2026 · KANPUR, INDIA</span>
             </div>
-            <div className="flex items-center gap-4 uppercase tracking-wider">
+            <div className="flex items-center gap-4 uppercase tracking-[0.14em]">
               <span>SYSTEM ARCHITECTURE</span>
               <span className="text-[#171615]/20">/</span>
               <span>BACKEND CONTROL PLANES</span>
@@ -232,28 +232,29 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenContact }) => {
           </div>
 
           {/* CENTER ZONE: MASTHEAD WORDMARK (SUFIYAN        KHAN)
-              Placed slightly above vertical center with a centered aperture for the portrait */}
-          <div className="absolute top-[28%] xl:top-[30%] inset-x-0 z-10 pointer-events-none select-none">
+              Shifted 5–8% upward (top: 22-23%) to reduce empty space under navbar.
+              Scaled 5–8% up with clamp(5.2rem, 9.2vw, 9.1rem) inside safe margins. */}
+          <div className="absolute top-[22%] xl:top-[23%] inset-x-0 z-10 pointer-events-none select-none">
             <div className="w-full flex items-baseline justify-center">
               {/* Left Word: SUFIYAN (Right-aligned to centerline aperture) */}
-              <div className="flex-1 flex justify-end pr-[clamp(7.5rem,11.5vw,12rem)]">
+              <div className="flex-1 flex justify-end pr-[clamp(7.8rem,11.8vw,12.5rem)]">
                 <motion.span
                   initial={{ opacity: 0, x: -30 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.9, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                  className="text-[clamp(4.8rem,8.6vw,8.5rem)] font-black uppercase tracking-tight text-[#171615] leading-none select-none"
+                  className="text-[clamp(5.2rem,9.2vw,9.1rem)] font-black uppercase tracking-tight text-[#171615] leading-none select-none"
                 >
                   SUFIYAN
                 </motion.span>
               </div>
 
               {/* Right Word: KHAN (Left-aligned from centerline aperture) */}
-              <div className="flex-1 flex justify-start pl-[clamp(7.5rem,11.5vw,12rem)]">
+              <div className="flex-1 flex justify-start pl-[clamp(7.8rem,11.8vw,12.5rem)]">
                 <motion.span
                   initial={{ opacity: 0, x: 30 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.9, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                  className="text-[clamp(4.8rem,8.6vw,8.5rem)] font-black uppercase tracking-tight text-[#171615] leading-none select-none"
+                  className="text-[clamp(5.2rem,9.2vw,9.1rem)] font-black uppercase tracking-tight text-[#171615] leading-none select-none"
                 >
                   KHAN
                 </motion.span>
@@ -262,10 +263,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenContact }) => {
           </div>
 
           {/* CENTERPIECE: TAILORED PORTRAIT
-              Positioned centrally inside the aperture between SUFIYAN and KHAN.
-              Head sits at upper/middle typography; body extends downward naturally.
-              Bottom fade terminates cleanly ABOVE lower metadata. */}
-          <div className="absolute bottom-[clamp(4.5rem,7.5vh,6.5rem)] left-1/2 -translate-x-1/2 z-20 pointer-events-none flex flex-col items-center justify-end">
+              Shifted 5–8% upward in lockstep with the wordmark.
+              Scale increased ~5% (h-[53vh] xl:h-[58vh] max-h-[530px]) for commanding authority.
+              Bottom fade terminates cleanly well above lower metadata. */}
+          <div className="absolute bottom-[clamp(6rem,10vh,8.5rem)] left-1/2 -translate-x-1/2 z-20 pointer-events-none flex flex-col items-center justify-end">
             <motion.div
               style={{
                 scale: subjectScale,
@@ -283,14 +284,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenContact }) => {
               className="pointer-events-auto relative flex flex-col items-center justify-end cursor-grab active:cursor-grabbing"
             >
               {/* Subtle ground pedestal shadow */}
-              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-48 sm:w-60 h-4 bg-[#171615]/20 rounded-full blur-md pointer-events-none" />
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-52 sm:w-64 h-4 bg-[#171615]/20 rounded-full blur-md pointer-events-none" />
 
               <picture>
                 <source srcSet="/sufiyan-cutout.webp" type="image/webp" />
                 <img
                   src="/sufiyan-cutout.png"
                   alt="Sufiyan Khan — Forward-Deployed Engineering"
-                  className="h-[50vh] xl:h-[55vh] max-h-[500px] w-auto max-w-[420px] object-contain object-bottom select-none pointer-events-none drop-shadow-[0_20px_35px_rgba(23,22,21,0.2)]"
+                  className="h-[53vh] xl:h-[58vh] max-h-[530px] w-auto max-w-[445px] object-contain object-bottom select-none pointer-events-none drop-shadow-[0_20px_35px_rgba(23,22,21,0.2)]"
                   loading="eager"
                   decoding="async"
                   draggable={false}
@@ -300,13 +301,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenContact }) => {
           </div>
 
           {/* BOTTOM ZONE: Left Thesis Column + Right Proof Highlights Column */}
-          {/* Left Column: Thesis & Actions (Deliberate lower-left editorial block) */}
+          {/* Left Column: Thesis & Actions (Lifted 20–30px upward for generous bottom breathing room) */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.85, delay: 0.45, ease: [0.16, 1, 0.3, 1] }}
             style={{
-              bottom: 'clamp(5rem, 8vh, 7rem)',
+              bottom: 'clamp(6.25rem, 10vh, 8.5rem)',
               left: 'clamp(1.5rem, 4vw, 4.5rem)',
               width: 'min(360px, 25vw)',
             }}
@@ -345,13 +346,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenContact }) => {
             </div>
           </motion.div>
 
-          {/* Right Column: Production Highlights (Deliberate lower-right editorial block) */}
+          {/* Right Column: Production Highlights (Lifted 20–30px upward in vertical alignment with left column) */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.85, delay: 0.55, ease: [0.16, 1, 0.3, 1] }}
             style={{
-              bottom: 'clamp(5rem, 8vh, 7rem)',
+              bottom: 'clamp(6.25rem, 10vh, 8.5rem)',
               right: 'clamp(1.5rem, 4vw, 4.5rem)',
               width: 'min(320px, 22vw)',
             }}
