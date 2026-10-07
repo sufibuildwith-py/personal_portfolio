@@ -231,73 +231,71 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenContact }) => {
             </div>
           </div>
 
-          {/* CENTER ZONE: MASTHEAD WORDMARK (SUFIYAN        KHAN)
-              Shifted 5–8% upward (top: 22-23%) to reduce empty space under navbar.
-              Scaled 5–8% up with clamp(5.2rem, 9.2vw, 9.1rem) inside safe margins. */}
-          <div className="absolute top-[22%] xl:top-[23%] inset-x-0 z-10 pointer-events-none select-none">
-            <div className="w-full flex items-baseline justify-center">
-              {/* Left Word: SUFIYAN (Right-aligned to centerline aperture) */}
-              <div className="flex-1 flex justify-end pr-[clamp(7.8rem,11.8vw,12.5rem)]">
-                <motion.span
-                  initial={{ opacity: 0, x: -30 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.9, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                  className="text-[clamp(5.2rem,9.2vw,9.1rem)] font-black uppercase tracking-tight text-[#171615] leading-none select-none"
-                >
-                  SUFIYAN
-                </motion.span>
-              </div>
+          {/* CENTERPIECE: UNIFIED SUFIYAN [Image] KHAN LOCKUP
+              Locks the portrait directly between the words.
+              Head & shoulders sit in the aperture overlapping a bit of N and K.
+              Body extends downward naturally, fully integrated with the typography. */}
+          <div className="relative w-full flex items-center justify-center select-none pt-12 xl:pt-16 my-auto">
+            <div className="relative flex items-center justify-center select-none whitespace-nowrap">
+              {/* Word 1: SUFIYAN */}
+              <motion.span
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.9, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                className="text-[clamp(5.2rem,9.2vw,9.5rem)] font-black uppercase tracking-tight text-[#171615] leading-none select-none z-10"
+              >
+                SUFIYAN
+              </motion.span>
 
-              {/* Right Word: KHAN (Left-aligned from centerline aperture) */}
-              <div className="flex-1 flex justify-start pl-[clamp(7.8rem,11.8vw,12.5rem)]">
-                <motion.span
-                  initial={{ opacity: 0, x: 30 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.9, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                  className="text-[clamp(5.2rem,9.2vw,9.1rem)] font-black uppercase tracking-tight text-[#171615] leading-none select-none"
+              {/* Optical Gap: Sized slightly narrower than the shoulders (~160px) so portrait overlaps a bit of N and K */}
+              <div className="w-[130px] lg:w-[155px] xl:w-[175px] shrink-0 pointer-events-none" />
+
+              {/* Word 2: KHAN */}
+              <motion.span
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.9, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                className="text-[clamp(5.2rem,9.2vw,9.5rem)] font-black uppercase tracking-tight text-[#171615] leading-none select-none z-10"
+              >
+                KHAN
+              </motion.span>
+
+              {/* CENTERPIECE: TAILORED PORTRAIT
+                  Locked to the wordmark: Head rises slightly above the letters, shoulders overlap a bit of N and K, body extends downward */}
+              <div className="absolute top-[-40px] xl:top-[-50px] left-1/2 -translate-x-1/2 z-20 pointer-events-none flex flex-col items-center">
+                <motion.div
+                  style={{
+                    scale: subjectScale,
+                    opacity: subjectOpacity,
+                    perspective: 1200,
+                    rotateX: tiltX,
+                    rotateY: tiltY,
+                    x: translateX,
+                    y: translateY,
+                    transformStyle: 'preserve-3d',
+                  }}
+                  initial={{ opacity: 0, y: 35 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.95, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                  className="pointer-events-auto relative flex flex-col items-center cursor-grab active:cursor-grabbing"
                 >
-                  KHAN
-                </motion.span>
+                  {/* Subtle ground pedestal shadow */}
+                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-52 sm:w-64 h-4 bg-[#171615]/20 rounded-full blur-md pointer-events-none" />
+
+                  <picture>
+                    <source srcSet="/sufiyan-cutout.webp" type="image/webp" />
+                    <img
+                      src="/sufiyan-cutout.png"
+                      alt="Sufiyan Khan — Forward-Deployed Engineering"
+                      className="h-[56vh] xl:h-[62vh] max-h-[580px] min-h-[460px] w-auto max-w-[440px] object-contain object-bottom select-none pointer-events-none drop-shadow-[0_20px_35px_rgba(23,22,21,0.22)]"
+                      loading="eager"
+                      decoding="async"
+                      draggable={false}
+                    />
+                  </picture>
+                </motion.div>
               </div>
             </div>
-          </div>
-
-          {/* CENTERPIECE: TAILORED PORTRAIT
-              Shifted 5–8% upward in lockstep with the wordmark.
-              Scale increased ~5% (h-[53vh] xl:h-[58vh] max-h-[530px]) for commanding authority.
-              Bottom fade terminates cleanly well above lower metadata. */}
-          <div className="absolute bottom-[clamp(6rem,10vh,8.5rem)] left-1/2 -translate-x-1/2 z-20 pointer-events-none flex flex-col items-center justify-end">
-            <motion.div
-              style={{
-                scale: subjectScale,
-                opacity: subjectOpacity,
-                perspective: 1200,
-                rotateX: tiltX,
-                rotateY: tiltY,
-                x: translateX,
-                y: translateY,
-                transformStyle: 'preserve-3d',
-              }}
-              initial={{ opacity: 0, y: 35 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.95, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-              className="pointer-events-auto relative flex flex-col items-center justify-end cursor-grab active:cursor-grabbing"
-            >
-              {/* Subtle ground pedestal shadow */}
-              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-52 sm:w-64 h-4 bg-[#171615]/20 rounded-full blur-md pointer-events-none" />
-
-              <picture>
-                <source srcSet="/sufiyan-cutout.webp" type="image/webp" />
-                <img
-                  src="/sufiyan-cutout.png"
-                  alt="Sufiyan Khan — Forward-Deployed Engineering"
-                  className="h-[53vh] xl:h-[58vh] max-h-[530px] w-auto max-w-[445px] object-contain object-bottom select-none pointer-events-none drop-shadow-[0_20px_35px_rgba(23,22,21,0.2)]"
-                  loading="eager"
-                  decoding="async"
-                  draggable={false}
-                />
-              </picture>
-            </motion.div>
           </div>
 
           {/* BOTTOM ZONE: Left Thesis Column + Right Proof Highlights Column */}
@@ -424,35 +422,31 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenContact }) => {
             </div>
           </div>
 
-          {/* Centerpiece Wordmark */}
-          <div className="absolute top-[26%] inset-x-0 z-10 pointer-events-none select-none">
-            <div className="w-full flex items-baseline justify-center">
-              <div className="flex-1 flex justify-end pr-[clamp(4.5rem,8vw,7rem)]">
-                <span className="text-[clamp(3.8rem,7.5vw,5.5rem)] font-black uppercase tracking-tight text-[#171615] leading-none">
-                  SUFIYAN
-                </span>
-              </div>
-              <div className="flex-1 flex justify-start pl-[clamp(4.5rem,8vw,7rem)]">
-                <span className="text-[clamp(3.8rem,7.5vw,5.5rem)] font-black uppercase tracking-tight text-[#171615] leading-none">
-                  KHAN
-                </span>
-              </div>
-            </div>
-          </div>
+          {/* Unified SUFIYAN [Image] KHAN Lockup on Tablet */}
+          <div className="relative w-full flex items-center justify-center select-none pt-8 my-auto">
+            <div className="relative flex items-center justify-center select-none whitespace-nowrap">
+              <span className="text-[clamp(3.8rem,7.5vw,5.5rem)] font-black uppercase tracking-tight text-[#171615] leading-none select-none z-10">
+                SUFIYAN
+              </span>
+              <div className="w-[100px] md:w-[125px] shrink-0 pointer-events-none" />
+              <span className="text-[clamp(3.8rem,7.5vw,5.5rem)] font-black uppercase tracking-tight text-[#171615] leading-none select-none z-10">
+                KHAN
+              </span>
 
-          {/* Tablet Portrait */}
-          <div className="absolute bottom-[clamp(5rem,8vh,7rem)] left-1/2 -translate-x-1/2 z-20 pointer-events-none flex flex-col items-center justify-end">
-            <div className="relative flex flex-col items-center justify-end">
-              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-44 h-4 bg-[#171615]/20 rounded-full blur-md pointer-events-none" />
-              <picture>
-                <source srcSet="/sufiyan-cutout.webp" type="image/webp" />
-                <img
-                  src="/sufiyan-cutout.png"
-                  alt="Sufiyan Khan"
-                  className="h-[42vh] max-h-[390px] w-auto max-w-[340px] object-contain object-bottom select-none pointer-events-none drop-shadow-[0_16px_30px_rgba(23,22,21,0.2)]"
-                  loading="eager"
-                />
-              </picture>
+              <div className="absolute top-[-30px] left-1/2 -translate-x-1/2 z-20 pointer-events-none flex flex-col items-center">
+                <div className="relative flex flex-col items-center">
+                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-44 h-4 bg-[#171615]/20 rounded-full blur-md pointer-events-none" />
+                  <picture>
+                    <source srcSet="/sufiyan-cutout.webp" type="image/webp" />
+                    <img
+                      src="/sufiyan-cutout.png"
+                      alt="Sufiyan Khan"
+                      className="h-[48vh] max-h-[460px] w-auto max-w-[340px] object-contain object-bottom select-none pointer-events-none drop-shadow-[0_16px_30px_rgba(23,22,21,0.2)]"
+                      loading="eager"
+                    />
+                  </picture>
+                </div>
+              </div>
             </div>
           </div>
 
