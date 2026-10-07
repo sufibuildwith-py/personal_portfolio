@@ -1,0 +1,126 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    scroll-behavior: auto;
+    background-color: #F5F2EA;
+    color: #171615;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    overflow-x: hidden;
+    background-color: #F5F2EA;
+    color: #171615;
+    min-height: 100vh;
+  }
+}
+
+/* ==========================================================================
+   QUIET LUXURY / EDITORIAL PAPER & GLASS STYLES
+   ========================================================================== */
+
+/* Tactile paper card */
+.paper-card {
+  background-color: #FAF8F5;
+  border: 1px solid rgba(23, 22, 21, 0.08);
+  box-shadow: 0 1px 3px rgba(23, 22, 21, 0.02), 0 8px 24px -6px rgba(23, 22, 21, 0.04);
+}
+
+.paper-card-elevated {
+  background-color: #FFFFFF;
+  border: 1px solid rgba(23, 22, 21, 0.10);
+  box-shadow: 0 2px 6px rgba(23, 22, 21, 0.03), 0 16px 36px -8px rgba(23, 22, 21, 0.06);
+}
+
+/* Restrained Ivory Frosted Glass */
+.glass-ivory {
+  background: rgba(245, 242, 234, 0.85);
+  border: 1px solid rgba(23, 22, 21, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* Deep Keynote Contrast Dark Card */
+.glass-dark {
+  background: linear-gradient(145deg, #1A1918, #121110);
+  border: 1px solid rgba(245, 242, 234, 0.10);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.35);
+}
+
+/* Hairline borders */
+.border-hairline {
+  border-color: rgba(23, 22, 21, 0.08);
+}
+
+/* Editorial Ink Typography */
+.text-ink {
+  color: #171615;
+}
+
+.text-ink-secondary {
+  color: #6E6A64;
+}
+
+/* Restrained deep oxblood accent */
+.text-burgundy-accent {
+  color: #64131C;
+}
+
+/* Subtle paper texture noise overlay */
+.bg-paper-noise {
+  background-image: radial-gradient(rgba(23, 22, 21, 0.02) 1px, transparent 0);
+  background-size: 20px 20px;
+}
+
+/* Custom Refined Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F5F2EA;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #DBD5C9;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #64131C;
+}
+
+/* Lenis smooth scrolling helper */
+html.lenis, html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
+}
