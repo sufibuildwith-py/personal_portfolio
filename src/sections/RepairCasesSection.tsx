@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react'
-import { motion, useScroll, useTransform, MotionValue } from 'framer-motion'
+import { motion, useScroll, useTransform } from 'framer-motion'
 import { FadeIn } from '../components/FadeIn'
+import { useReducedMotion } from '../hooks/useReducedMotion'
 import {
   Github,
   ExternalLink,
@@ -8,25 +9,140 @@ import {
   ShieldCheck,
   Lock,
   Workflow,
-  Sparkles
+  Sparkles,
+  ArrowUpRight
 } from 'lucide-react'
 
-export const RepairCasesSection: React.FC<{ onOpenContact?: () => void }> = ({ onOpenContact: _onOpenContact }) => {
-  const containerRef = useRef<HTMLElement>(null)
+export const RepairCasesSection: React.FC<{ onOpenContact?: () => void }> = ({ onOpenContact }) => {
+  const trackRef = useRef<HTMLDivElement>(null)
+  const prefersReducedMotion = useReducedMotion()
+
+  // Track scroll progression specifically through the sticky card track
   const { scrollYProgress } = useScroll({
-    target: containerRef,
+    target: trackRef,
     offset: ['start start', 'end end'],
   })
 
+  /* =========================================================================
+     TRANSFORMATION RANGES FOR 5 CONTINUOUS OVERLAPPING CARDS
+     4 Transitions across [0, 1]:
+     Card 0: Already settled at start -> recedes as Card 1 arrives
+     Card 1: Enters [0.04, 0.22] -> settles -> recedes as Card 2 arrives
+     Card 2: Enters [0.28, 0.46] -> settles -> recedes as Card 3 arrives
+     Card 3: Enters [0.52, 0.70] -> settles -> recedes as Card 4 arrives
+     Card 4: Enters [0.76, 0.94] -> settles on top of the stack
+     ========================================================================= */
+
+  /* =========================================================================
+     TRANSFORMATION RANGES FOR 5 CONTINUOUS OVERLAPPING CARDS
+     4 Transitions across [0, 1]:
+     Card 0: Settled at start -> recedes as Card 1 arrives -> recedes further -> fades once 3 layers deep
+     Card 1: Hidden -> Enters [0.04, 0.24] -> settles -> recedes as Card 2 arrives -> recedes further -> fades
+     Card 2: Hidden -> Enters [0.28, 0.48] -> settles -> recedes as Card 3 arrives -> recedes further
+     Card 3: Hidden -> Enters [0.52, 0.72] -> settles -> recedes as Card 4 arrives
+     Card 4: Hidden -> Enters [0.76, 0.96] -> settles on top of the stack through 1.0
+     * Rule: Visible cards maintain 100% solid opacity (no ghosting/translucency).
+     * Rule: Incoming cards have opacity: 0 before entry range so they never peek at the bottom.
+     ========================================================================= */
+
+  // Card 0 (SA Command) - Base layer
+  const card0Y = useTransform(
+    scrollYProgress,
+    [0, 0.04, 0.24, 0.28, 0.48, 0.52, 0.62],
+    ['0%', '0%', '-3.5%', '-3.5%', '-7%', '-7%', '-10%']
+  )
+  const card0Scale = useTransform(
+    scrollYProgress,
+    [0, 0.04, 0.24, 0.28, 0.48, 0.52, 0.62],
+    [1, 1, 0.97, 0.97, 0.94, 0.94, 0.91]
+  )
+  const card0Opacity = useTransform(
+    scrollYProgress,
+    [0, 0.52, 0.62],
+    [1, 1, 0]
+  )
+  const card0PointerEvents = useTransform(scrollYProgress, (p) => (p < 0.20 ? 'auto' : 'none'))
+
+  // Card 1 (Sentinel)
+  const card1Y = useTransform(
+    scrollYProgress,
+    [0, 0.04, 0.24, 0.28, 0.48, 0.52, 0.72, 0.76, 0.86],
+    ['100%', '100%', '0%', '0%', '-3.5%', '-3.5%', '-7%', '-7%', '-10%']
+  )
+  const card1Scale = useTransform(
+    scrollYProgress,
+    [0, 0.04, 0.24, 0.28, 0.48, 0.52, 0.72, 0.76, 0.86],
+    [1, 1, 1, 1, 0.97, 0.97, 0.94, 0.94, 0.91]
+  )
+  const card1Opacity = useTransform(
+    scrollYProgress,
+    [0, 0.039, 0.06, 0.76, 0.86],
+    [0, 0, 1, 1, 0]
+  )
+  const card1PointerEvents = useTransform(scrollYProgress, (p) => (p >= 0.20 && p < 0.44 ? 'auto' : 'none'))
+
+  // Card 2 (GuideIn)
+  const card2Y = useTransform(
+    scrollYProgress,
+    [0, 0.28, 0.48, 0.52, 0.72, 0.76, 0.96],
+    ['100%', '100%', '0%', '0%', '-3.5%', '-3.5%', '-7%']
+  )
+  const card2Scale = useTransform(
+    scrollYProgress,
+    [0, 0.28, 0.48, 0.52, 0.72, 0.76, 0.96],
+    [1, 1, 1, 1, 0.97, 0.97, 0.94]
+  )
+  const card2Opacity = useTransform(
+    scrollYProgress,
+    [0, 0.279, 0.30, 1],
+    [0, 0, 1, 1]
+  )
+  const card2PointerEvents = useTransform(scrollYProgress, (p) => (p >= 0.44 && p < 0.68 ? 'auto' : 'none'))
+
+  // Card 3 (Offline Document Advisor)
+  const card3Y = useTransform(
+    scrollYProgress,
+    [0, 0.52, 0.72, 0.76, 0.96],
+    ['100%', '100%', '0%', '0%', '-3.5%']
+  )
+  const card3Scale = useTransform(
+    scrollYProgress,
+    [0, 0.52, 0.72, 0.76, 0.96],
+    [1, 1, 1, 1, 0.97]
+  )
+  const card3Opacity = useTransform(
+    scrollYProgress,
+    [0, 0.519, 0.54, 1],
+    [0, 0, 1, 1]
+  )
+  const card3PointerEvents = useTransform(scrollYProgress, (p) => (p >= 0.68 && p < 0.92 ? 'auto' : 'none'))
+
+  // Card 4 (Laptop Care)
+  const card4Y = useTransform(
+    scrollYProgress,
+    [0, 0.76, 0.96, 1],
+    ['100%', '100%', '0%', '0%']
+  )
+  const card4Scale = useTransform(
+    scrollYProgress,
+    [0, 0.76, 0.96, 1],
+    [1, 1, 1, 1]
+  )
+  const card4Opacity = useTransform(
+    scrollYProgress,
+    [0, 0.759, 0.78, 1],
+    [0, 0, 1, 1]
+  )
+  const card4PointerEvents = useTransform(scrollYProgress, (p) => (p >= 0.92 ? 'auto' : 'none'))
+
   return (
     <section
-      ref={containerRef}
       id="systems"
-      className="relative w-full bg-[#F5F2EA] text-[#171615] rounded-t-[40px] sm:rounded-t-[50px] md:rounded-t-[60px] -mt-10 sm:-mt-12 z-20 px-4 sm:px-6 md:px-10 lg:px-12 pt-20 sm:pt-28 pb-32 border-t border-[#171615]/10"
+      className="relative w-full bg-[#F5F2EA] text-[#171615] rounded-t-[40px] sm:rounded-t-[50px] md:rounded-t-[60px] -mt-10 sm:-mt-12 z-20 px-4 sm:px-6 md:px-10 lg:px-12 pt-20 sm:pt-28 pb-16 sm:pb-24 border-t border-[#171615]/10"
       aria-label="Engineered Systems and Production Case Studies"
     >
       {/* Editorial Section Header */}
-      <div className="max-w-6xl mx-auto mb-14 sm:mb-20 text-center">
+      <div className="max-w-6xl mx-auto mb-10 sm:mb-14 text-center">
         <FadeIn delay={0} y={15}>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-[#171615]/10 text-xs font-mono uppercase tracking-widest text-[#64131C] font-semibold mb-3 shadow-2xs">
             <Code2 className="w-3.5 h-3.5" />
@@ -50,102 +166,114 @@ export const RepairCasesSection: React.FC<{ onOpenContact?: () => void }> = ({ o
         </FadeIn>
       </div>
 
-      {/* Case Studies Stacking Container */}
-      <div className="max-w-7xl mx-auto w-full relative space-y-10 lg:space-y-0">
-        {/* =========================================================================
-            01 / SA COMMAND — FLAGSHIP CASE STUDY
-            ========================================================================= */}
-        <CaseCardWrapper
-          index={0}
-          totalCards={4}
-          progress={scrollYProgress}
-          range={[0, 1]}
-          targetScale={1 - 3 * 0.025}
-        >
-          <SACommandCard />
-        </CaseCardWrapper>
-
-        {/* =========================================================================
-            02 / SENTINEL — PRINCIPLE & GOVERNANCE COMPOSITION
-            ========================================================================= */}
-        <CaseCardWrapper
-          index={1}
-          totalCards={4}
-          progress={scrollYProgress}
-          range={[0.25, 1]}
-          targetScale={1 - 2 * 0.025}
-        >
-          <SentinelCard />
-        </CaseCardWrapper>
-
-        {/* =========================================================================
-            03 / GUIDEIN — TECHNICAL ARCHIVE COMPOSITION
-            ========================================================================= */}
-        <CaseCardWrapper
-          index={2}
-          totalCards={4}
-          progress={scrollYProgress}
-          range={[0.5, 1]}
-          targetScale={1 - 1 * 0.025}
-        >
-          <GuideInCard />
-        </CaseCardWrapper>
-
-        {/* =========================================================================
-            04 / OFFLINE DOCUMENT ADVISOR — DOCUMENT INDEX COMPOSITION
-            ========================================================================= */}
-        <CaseCardWrapper
-          index={3}
-          totalCards={4}
-          progress={scrollYProgress}
-          range={[0.75, 1]}
-          targetScale={1}
-        >
-          <OfflineDocumentAdvisorCard />
-        </CaseCardWrapper>
-      </div>
-
       {/* =========================================================================
-          05 / LAPTOP CARE — SECONDARY COMMERCIAL CASE STUDY MONOGRAPH
+          REDUCED MOTION FALLBACK: Clean readable stacked list
           ========================================================================= */}
-      <div className="max-w-7xl mx-auto w-full mt-20 sm:mt-28">
-        <LaptopCareShowcase />
-      </div>
+      {prefersReducedMotion ? (
+        <div className="max-w-7xl mx-auto w-full space-y-10 sm:space-y-12">
+          <div className="w-full rounded-[24px] sm:rounded-[32px] md:rounded-[36px] border border-[#171615]/10 bg-white text-[#171615] p-5 sm:p-7 md:p-8 lg:p-9 shadow-sm">
+            <SACommandCard />
+          </div>
+          <div className="w-full rounded-[24px] sm:rounded-[32px] md:rounded-[36px] border border-[#171615]/10 bg-white text-[#171615] p-5 sm:p-7 md:p-8 lg:p-9 shadow-sm">
+            <SentinelCard />
+          </div>
+          <div className="w-full rounded-[24px] sm:rounded-[32px] md:rounded-[36px] border border-[#171615]/10 bg-white text-[#171615] p-5 sm:p-7 md:p-8 lg:p-9 shadow-sm">
+            <GuideInCard />
+          </div>
+          <div className="w-full rounded-[24px] sm:rounded-[32px] md:rounded-[36px] border border-[#171615]/10 bg-white text-[#171615] p-5 sm:p-7 md:p-8 lg:p-9 shadow-sm">
+            <OfflineDocumentAdvisorCard />
+          </div>
+          <div className="w-full rounded-[24px] sm:rounded-[32px] md:rounded-[36px] border border-[#171615]/10 bg-white text-[#171615] p-5 sm:p-7 md:p-8 lg:p-9 shadow-sm">
+            <LaptopCareCard onOpenContact={onOpenContact} />
+          </div>
+        </div>
+      ) : (
+        /* =========================================================================
+           CONTINUOUS STICKY-STACK ARCHITECTURE (DESKTOP + MOBILE)
+           Single tall scroll track pinning a sticky viewport frame with 5 cards
+           ========================================================================= */
+        <div
+          ref={trackRef}
+          className="relative w-full h-[360vh] sm:h-[400vh] lg:h-[420vh]"
+        >
+          {/* Sticky Presentation Frame pinned below the navbar */}
+          <div className="sticky top-[72px] sm:top-20 md:top-24 w-full flex items-center justify-center pointer-events-none">
+            {/* Card Canvas: exact common container bounding box */}
+            <div className="relative w-full max-w-7xl mx-auto h-[min(84svh,780px)] min-h-[500px]">
+              {/* CARD 01: SA COMMAND (Base layer, z-index 10) */}
+              <motion.div
+                style={{
+                  y: card0Y,
+                  scale: card0Scale,
+                  opacity: card0Opacity,
+                  pointerEvents: card0PointerEvents,
+                  zIndex: 10,
+                }}
+                className="absolute inset-0 w-full h-full rounded-[22px] sm:rounded-[30px] md:rounded-[34px] border border-[#171615]/10 bg-white text-[#171615] p-4 sm:p-6 md:p-8 lg:p-9 shadow-[0_25px_60px_-15px_rgba(23,22,21,0.08)] origin-top overflow-hidden flex flex-col justify-between"
+              >
+                <SACommandCard />
+              </motion.div>
+
+              {/* CARD 02: SENTINEL (Enters from below, z-index 20) */}
+              <motion.div
+                style={{
+                  y: card1Y,
+                  scale: card1Scale,
+                  opacity: card1Opacity,
+                  pointerEvents: card1PointerEvents,
+                  zIndex: 20,
+                }}
+                className="absolute inset-0 w-full h-full rounded-[22px] sm:rounded-[30px] md:rounded-[34px] border border-[#171615]/10 bg-white text-[#171615] p-4 sm:p-6 md:p-8 lg:p-9 shadow-[0_25px_60px_-15px_rgba(23,22,21,0.08)] origin-top overflow-hidden flex flex-col justify-between"
+              >
+                <SentinelCard />
+              </motion.div>
+
+              {/* CARD 03: GUIDEIN (Enters from below, z-index 30) */}
+              <motion.div
+                style={{
+                  y: card2Y,
+                  scale: card2Scale,
+                  opacity: card2Opacity,
+                  pointerEvents: card2PointerEvents,
+                  zIndex: 30,
+                }}
+                className="absolute inset-0 w-full h-full rounded-[22px] sm:rounded-[30px] md:rounded-[34px] border border-[#171615]/10 bg-white text-[#171615] p-4 sm:p-6 md:p-8 lg:p-9 shadow-[0_25px_60px_-15px_rgba(23,22,21,0.08)] origin-top overflow-hidden flex flex-col justify-between"
+              >
+                <GuideInCard />
+              </motion.div>
+
+              {/* CARD 04: OFFLINE DOCUMENT ADVISOR (Enters from below, z-index 40) */}
+              <motion.div
+                style={{
+                  y: card3Y,
+                  scale: card3Scale,
+                  opacity: card3Opacity,
+                  pointerEvents: card3PointerEvents,
+                  zIndex: 40,
+                }}
+                className="absolute inset-0 w-full h-full rounded-[22px] sm:rounded-[30px] md:rounded-[34px] border border-[#171615]/10 bg-white text-[#171615] p-4 sm:p-6 md:p-8 lg:p-9 shadow-[0_25px_60px_-15px_rgba(23,22,21,0.08)] origin-top overflow-hidden flex flex-col justify-between"
+              >
+                <OfflineDocumentAdvisorCard />
+              </motion.div>
+
+              {/* CARD 05: LAPTOP CARE (Final stack crown, z-index 50) */}
+              <motion.div
+                style={{
+                  y: card4Y,
+                  scale: card4Scale,
+                  opacity: card4Opacity,
+                  pointerEvents: card4PointerEvents,
+                  zIndex: 50,
+                }}
+                className="absolute inset-0 w-full h-full rounded-[22px] sm:rounded-[30px] md:rounded-[34px] border border-[#171615]/10 bg-white text-[#171615] p-4 sm:p-6 md:p-8 lg:p-9 shadow-[0_25px_60px_-15px_rgba(23,22,21,0.08)] origin-top overflow-hidden flex flex-col justify-between"
+              >
+                <LaptopCareCard onOpenContact={onOpenContact} />
+              </motion.div>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
-  )
-}
-
-/* -------------------------------------------------------------------------
-   STICKY CARD WRAPPER
-   On desktop (lg): Sticky stacking presentation with subtle Framer Motion scale
-   On mobile (<lg): Fluid natural document flow with full height and zero clipping
-   ------------------------------------------------------------------------- */
-const CaseCardWrapper: React.FC<{
-  children: React.ReactNode
-  index: number
-  totalCards: number
-  progress: MotionValue<number>
-  range: [number, number]
-  targetScale: number
-}> = ({ children, index, progress, range, targetScale }) => {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const scale = useTransform(progress, range, [1, targetScale])
-
-  return (
-    <div
-      ref={containerRef}
-      className="min-h-0 h-auto lg:h-[88vh] lg:min-h-[660px] lg:max-h-[860px] flex items-center justify-center lg:sticky lg:top-24 mb-8 lg:mb-0"
-    >
-      <motion.div
-        style={{
-          scale,
-          top: `${index * 16}px`,
-        }}
-        className="relative w-full max-w-7xl rounded-[24px] sm:rounded-[32px] md:rounded-[36px] border border-[#171615]/10 bg-white text-[#171615] p-5 sm:p-7 md:p-8 lg:p-9 shadow-[0_20px_50px_-15px_rgba(23,22,21,0.06)] origin-top overflow-hidden flex flex-col justify-between"
-      >
-        {children}
-      </motion.div>
-    </div>
   )
 }
 
@@ -176,14 +304,14 @@ const SACommandCard: React.FC = () => {
   const current = views[activeView]
 
   return (
-    <div className="flex flex-col justify-between h-full w-full">
+    <div className="flex flex-col justify-between h-full w-full overflow-y-auto lg:overflow-hidden pr-0.5">
       {/* 1. Header: Project Number + Title + Domain Badge */}
-      <div className="flex flex-wrap items-baseline justify-between gap-3 pb-3 sm:pb-4 border-b border-[#171615]/10">
+      <div className="flex flex-wrap items-baseline justify-between gap-3 pb-3 sm:pb-4 border-b border-[#171615]/10 shrink-0">
         <div className="flex items-baseline gap-3 sm:gap-4">
-          <span className="font-mono text-3xl sm:text-4xl font-black text-[#64131C] tracking-tighter">
+          <span className="font-mono text-2xl sm:text-4xl font-black text-[#64131C] tracking-tighter">
             01
           </span>
-          <h3 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tight text-[#171615]">
+          <h3 className="text-xl sm:text-3xl md:text-4xl font-black uppercase tracking-tight text-[#171615]">
             SA COMMAND
           </h3>
         </div>
@@ -193,27 +321,27 @@ const SACommandCard: React.FC = () => {
       </div>
 
       {/* Main Grid: Responsive Ordering (Mobile: Image First -> Text; Desktop: Text Left -> Image Right) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-7 lg:gap-8 xl:gap-10 items-stretch mt-4 sm:mt-5 flex-1">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8 xl:gap-10 items-stretch mt-3 sm:mt-5 flex-1 min-h-0">
         {/* PRIMARY VISUAL ARTIFACT (Order-1 on Mobile, Order-2 on Desktop) */}
-        <div className="order-1 lg:order-2 lg:col-span-7 flex flex-col justify-center">
-          <div className="rounded-2xl border border-[#171615]/10 bg-[#FAF8F5] overflow-hidden shadow-sm flex flex-col h-full justify-between">
+        <div className="order-1 lg:order-2 lg:col-span-7 flex flex-col justify-center min-h-0">
+          <div className="rounded-xl sm:rounded-2xl border border-[#171615]/10 bg-[#FAF8F5] overflow-hidden shadow-2xs flex flex-col h-full justify-between">
             {/* macOS Editorial Window Chrome */}
-            <div className="px-3.5 py-2 sm:py-2.5 bg-[#F0EDE4] border-b border-[#171615]/10 flex items-center justify-between gap-2">
+            <div className="px-3 sm:px-3.5 py-1.5 sm:py-2.5 bg-[#F0EDE4] border-b border-[#171615]/10 flex items-center justify-between gap-2 shrink-0">
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#171615]/20 inline-block" />
-                <span className="w-2.5 h-2.5 rounded-full bg-[#171615]/20 inline-block" />
-                <span className="w-2.5 h-2.5 rounded-full bg-[#171615]/20 inline-block" />
-                <span className="ml-2 font-mono text-[10px] text-[#6E6A64] tracking-wider uppercase hidden sm:inline">
+                <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-[#171615]/20 inline-block" />
+                <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-[#171615]/20 inline-block" />
+                <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-[#171615]/20 inline-block" />
+                <span className="ml-2 font-mono text-[9px] sm:text-[10px] text-[#6E6A64] tracking-wider uppercase hidden sm:inline">
                   sa-command.internal // STOMP: CONNECTED
                 </span>
               </div>
 
               {/* View Switcher Tabs */}
-              <div className="flex items-center gap-1 font-mono text-[10px]">
+              <div className="flex items-center gap-1 font-mono text-[9px] sm:text-[10px]">
                 <button
                   type="button"
                   onClick={() => setActiveView('arena')}
-                  className={`px-2.5 py-0.5 rounded transition-all ${
+                  className={`px-2 py-0.5 rounded transition-all cursor-pointer ${
                     activeView === 'arena'
                       ? 'bg-[#171615] text-white font-bold'
                       : 'bg-white/60 text-[#6E6A64] hover:text-[#171615]'
@@ -224,7 +352,7 @@ const SACommandCard: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setActiveView('philosophy')}
-                  className={`px-2.5 py-0.5 rounded transition-all ${
+                  className={`px-2 py-0.5 rounded transition-all cursor-pointer ${
                     activeView === 'philosophy'
                       ? 'bg-[#171615] text-white font-bold'
                       : 'bg-white/60 text-[#6E6A64] hover:text-[#171615]'
@@ -235,7 +363,7 @@ const SACommandCard: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setActiveView('deck')}
-                  className={`px-2.5 py-0.5 rounded transition-all ${
+                  className={`px-2 py-0.5 rounded transition-all cursor-pointer ${
                     activeView === 'deck'
                       ? 'bg-[#171615] text-white font-bold'
                       : 'bg-white/60 text-[#6E6A64] hover:text-[#171615]'
@@ -247,7 +375,7 @@ const SACommandCard: React.FC = () => {
             </div>
 
             {/* Primary Screenshot Display */}
-            <div className="relative aspect-[16/10] sm:aspect-[16/9.5] w-full bg-[#171615] overflow-hidden group">
+            <div className="relative aspect-[16/9.5] w-full bg-[#171615] overflow-hidden group flex-1 min-h-[140px] sm:min-h-[220px]">
               <img
                 src={current.image}
                 alt="SA Command production interface"
@@ -257,13 +385,13 @@ const SACommandCard: React.FC = () => {
                 loading="lazy"
                 className="w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-[1.02]"
               />
-              <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded bg-[#171615]/80 backdrop-blur-md text-[9px] font-mono uppercase tracking-widest text-[#FAF8F5] border border-white/10">
+              <div className="absolute top-2 right-2 px-1.5 sm:px-2 py-0.5 rounded bg-[#171615]/80 backdrop-blur-md text-[8px] sm:text-[9px] font-mono uppercase tracking-widest text-[#FAF8F5] border border-white/10">
                 {current.badge}
               </div>
             </div>
 
             {/* Editorial Caption Bar */}
-            <div className="px-3.5 py-2 bg-white border-t border-[#171615]/8 flex items-center justify-between text-[11px] font-mono text-[#6E6A64]">
+            <div className="px-3 py-1.5 sm:py-2 bg-white border-t border-[#171615]/8 flex items-center justify-between text-[10px] sm:text-[11px] font-mono text-[#6E6A64] shrink-0">
               <span className="truncate pr-2">{current.caption}</span>
               <span className="text-[#64131C] font-bold whitespace-nowrap">PROD ARTIFACT</span>
             </div>
@@ -274,14 +402,14 @@ const SACommandCard: React.FC = () => {
         <div className="order-2 lg:order-1 lg:col-span-5 flex flex-col justify-between">
           <div>
             {/* Editorial pull quote */}
-            <p className="text-sm sm:text-base md:text-lg font-bold uppercase tracking-tight text-[#171615] leading-snug">
+            <p className="text-xs sm:text-base md:text-lg font-bold uppercase tracking-tight text-[#171615] leading-snug">
               “Operations infrastructure for an active production company.”
             </p>
 
             {/* Context & Architecture Ledger */}
-            <div className="space-y-3.5 mt-3.5 pt-3.5 border-t border-[#171615]/8">
+            <div className="space-y-2.5 sm:space-y-3.5 mt-2.5 sm:mt-3.5 pt-2.5 sm:pt-3.5 border-t border-[#171615]/8">
               <div>
-                <span className="font-mono text-[10px] uppercase tracking-widest text-[#6E6A64] font-bold block mb-1">
+                <span className="font-mono text-[9px] sm:text-[10px] uppercase tracking-widest text-[#6E6A64] font-bold block mb-0.5 sm:mb-1">
                   01 // PROBLEM &amp; OPERATIONAL CONTEXT
                 </span>
                 <p className="text-xs text-[#171615] leading-relaxed">
@@ -290,7 +418,7 @@ const SACommandCard: React.FC = () => {
               </div>
 
               <div>
-                <span className="font-mono text-[10px] uppercase tracking-widest text-[#64131C] font-bold block mb-1">
+                <span className="font-mono text-[9px] sm:text-[10px] uppercase tracking-widest text-[#64131C] font-bold block mb-0.5 sm:mb-1">
                   02 // ARCHITECTURE &amp; EXECUTION
                 </span>
                 <p className="text-xs text-[#171615] leading-relaxed">
@@ -301,27 +429,27 @@ const SACommandCard: React.FC = () => {
           </div>
 
           {/* Technical Invariants & Stack */}
-          <div className="mt-4 pt-3.5 border-t border-[#171615]/10">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] font-mono">
+          <div className="mt-3 sm:mt-4 pt-2.5 sm:pt-3.5 border-t border-[#171615]/10">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2 text-[10px] sm:text-[11px] font-mono">
               <div>
-                <span className="text-[#64131C] font-bold block text-[10px]">BACKEND &amp; CLIENT:</span>
+                <span className="text-[#64131C] font-bold block text-[9px] sm:text-[10px]">BACKEND &amp; CLIENT:</span>
                 <span className="text-[#171615]">Java 21 · Spring Boot · PostgreSQL 16 · Tauri 2 · React · Expo</span>
               </div>
               <div>
-                <span className="text-[#64131C] font-bold block text-[10px]">GOVERNANCE &amp; INVARIANTS:</span>
+                <span className="text-[#64131C] font-bold block text-[9px] sm:text-[10px]">GOVERNANCE &amp; INVARIANTS:</span>
                 <span className="text-[#171615]">EVE Local AI · 2-Stage Qwen Reranker · 30m Veil Sessions · WebSockets</span>
               </div>
             </div>
 
-            <div className="mt-3.5 pt-2.5 border-t border-[#171615]/8 flex items-center justify-between flex-wrap gap-2">
-              <span className="text-[11px] font-mono text-emerald-800 font-medium">
+            <div className="mt-2.5 sm:mt-3.5 pt-2 sm:pt-2.5 border-t border-[#171615]/8 flex items-center justify-between flex-wrap gap-2">
+              <span className="text-[10px] sm:text-[11px] font-mono text-emerald-800 font-medium">
                 ✓ Concurrency-safe gear lock · 30m cryptographic session grants
               </span>
               <a
                 href="https://github.com/sufibuildwith-py/sa-controlcentre"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-3.5 py-1.5 rounded-full bg-[#171615] hover:bg-[#64131C] text-[#FAF8F5] text-xs font-mono uppercase tracking-wider inline-flex items-center gap-1.5 transition-colors"
+                className="px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-[#171615] hover:bg-[#64131C] text-[#FAF8F5] text-[11px] sm:text-xs font-mono uppercase tracking-wider inline-flex items-center gap-1.5 transition-colors cursor-pointer"
               >
                 <Github className="w-3.5 h-3.5" />
                 <span>Inspect Codebase</span>
@@ -341,14 +469,14 @@ const SentinelCard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'console' | 'architecture'>('console')
 
   return (
-    <div className="flex flex-col justify-between h-full w-full">
+    <div className="flex flex-col justify-between h-full w-full overflow-y-auto lg:overflow-hidden pr-0.5">
       {/* 1. Header: Project Number + Title + Domain Badge */}
-      <div className="flex flex-wrap items-baseline justify-between gap-3 pb-3 sm:pb-4 border-b border-[#171615]/10">
+      <div className="flex flex-wrap items-baseline justify-between gap-3 pb-3 sm:pb-4 border-b border-[#171615]/10 shrink-0">
         <div className="flex items-baseline gap-3 sm:gap-4">
-          <span className="font-mono text-3xl sm:text-4xl font-black text-[#64131C] tracking-tighter">
+          <span className="font-mono text-2xl sm:text-4xl font-black text-[#64131C] tracking-tighter">
             02
           </span>
-          <h3 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tight text-[#171615]">
+          <h3 className="text-xl sm:text-3xl md:text-4xl font-black uppercase tracking-tight text-[#171615]">
             SENTINEL
           </h3>
         </div>
@@ -358,26 +486,26 @@ const SentinelCard: React.FC = () => {
       </div>
 
       {/* Main Grid: Responsive Ordering */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-7 lg:gap-8 xl:gap-10 items-stretch mt-4 sm:mt-5 flex-1">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8 xl:gap-10 items-stretch mt-3 sm:mt-5 flex-1 min-h-0">
         {/* PRIMARY VISUAL ARTIFACT (Order-1 on Mobile, Order-2 on Desktop) */}
-        <div className="order-1 lg:order-2 lg:col-span-7 flex flex-col justify-center">
-          <div className="rounded-2xl border border-[#171615]/10 bg-[#FAF8F5] overflow-hidden shadow-sm flex flex-col h-full justify-between">
+        <div className="order-1 lg:order-2 lg:col-span-7 flex flex-col justify-center min-h-0">
+          <div className="rounded-xl sm:rounded-2xl border border-[#171615]/10 bg-[#FAF8F5] overflow-hidden shadow-2xs flex flex-col h-full justify-between">
             {/* Editorial Chrome & Tab Switcher */}
-            <div className="px-3.5 py-2 sm:py-2.5 bg-[#F0EDE4] border-b border-[#171615]/10 flex items-center justify-between gap-2">
+            <div className="px-3 sm:px-3.5 py-1.5 sm:py-2.5 bg-[#F0EDE4] border-b border-[#171615]/10 flex items-center justify-between gap-2 shrink-0">
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#171615]/20 inline-block" />
-                <span className="w-2.5 h-2.5 rounded-full bg-[#171615]/20 inline-block" />
-                <span className="w-2.5 h-2.5 rounded-full bg-[#171615]/20 inline-block" />
-                <span className="ml-2 font-mono text-[10px] text-[#6E6A64] tracking-wider uppercase hidden sm:inline">
+                <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-[#171615]/20 inline-block" />
+                <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-[#171615]/20 inline-block" />
+                <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-[#171615]/20 inline-block" />
+                <span className="ml-2 font-mono text-[9px] sm:text-[10px] text-[#6E6A64] tracking-wider uppercase hidden sm:inline">
                   sentinel.recovery // INCIDENT #7B47C4EE
                 </span>
               </div>
 
-              <div className="flex items-center gap-1 font-mono text-[10px]">
+              <div className="flex items-center gap-1 font-mono text-[9px] sm:text-[10px]">
                 <button
                   type="button"
                   onClick={() => setActiveTab('console')}
-                  className={`px-2.5 py-0.5 rounded transition-all ${
+                  className={`px-2 py-0.5 rounded transition-all cursor-pointer ${
                     activeTab === 'console'
                       ? 'bg-[#171615] text-white font-bold'
                       : 'bg-white/60 text-[#6E6A64] hover:text-[#171615]'
@@ -388,7 +516,7 @@ const SentinelCard: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setActiveTab('architecture')}
-                  className={`px-2.5 py-0.5 rounded transition-all ${
+                  className={`px-2 py-0.5 rounded transition-all cursor-pointer ${
                     activeTab === 'architecture'
                       ? 'bg-[#171615] text-white font-bold'
                       : 'bg-white/60 text-[#6E6A64] hover:text-[#171615]'
@@ -401,7 +529,7 @@ const SentinelCard: React.FC = () => {
 
             {/* Tab Content Display */}
             {activeTab === 'console' ? (
-              <div className="relative aspect-[16/10] sm:aspect-[16/9.5] w-full bg-[#171615] overflow-hidden group">
+              <div className="relative aspect-[16/9.5] w-full bg-[#171615] overflow-hidden group flex-1 min-h-[140px] sm:min-h-[220px]">
                 <img
                   src="/projects/sentinel-console.webp"
                   alt="Sentinel live revenue recovery incident console"
@@ -411,72 +539,72 @@ const SentinelCard: React.FC = () => {
                   loading="lazy"
                   className="w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-[1.02]"
                 />
-                <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded bg-emerald-950/90 text-emerald-300 border border-emerald-500/30 text-[9px] font-mono uppercase tracking-widest">
+                <div className="absolute top-2 right-2 px-1.5 sm:px-2 py-0.5 rounded bg-emerald-950/90 text-emerald-300 border border-emerald-500/30 text-[8px] sm:text-[9px] font-mono uppercase tracking-widest">
                   POLICY: APPROVED · RECOVERED
                 </div>
               </div>
             ) : (
               /* Native SVG Architectural Truth Boundary Diagram */
-              <div className="aspect-[16/10] sm:aspect-[16/9.5] w-full bg-[#FAF8F5] p-3.5 sm:p-5 flex flex-col justify-between overflow-hidden">
+              <div className="aspect-[16/9.5] w-full bg-[#FAF8F5] p-2.5 sm:p-4 flex flex-col justify-between overflow-hidden flex-1 min-h-[180px]">
                 {/* Layer 1: AI Reasoning */}
-                <div className="p-2.5 sm:p-3 rounded-xl bg-white border border-[#171615]/10 shadow-2xs">
-                  <div className="flex items-center justify-between text-[10px] font-mono mb-1">
-                    <span className="text-[#6E6A64] font-bold flex items-center gap-1.5">
-                      <Sparkles className="w-3 h-3 text-amber-700" />
+                <div className="p-2 sm:p-2.5 rounded-lg bg-white border border-[#171615]/10 shadow-2xs">
+                  <div className="flex items-center justify-between text-[9px] sm:text-[10px] font-mono mb-0.5">
+                    <span className="text-[#6E6A64] font-bold flex items-center gap-1">
+                      <Sparkles className="w-2.5 sm:w-3 h-2.5 sm:h-3 text-amber-700" />
                       STAGE 01 // AI INVESTIGATION &amp; HYPOTHESIS
                     </span>
-                    <span className="text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
-                      GEMINI 1.5 + HISTORICAL RAG
+                    <span className="text-amber-800 bg-amber-50 px-1 py-0.5 rounded border border-amber-200 text-[8px] sm:text-[9px]">
+                      GEMINI 1.5 + RAG
                     </span>
                   </div>
-                  <p className="text-[11px] font-mono text-[#171615]">
+                  <p className="text-[10px] sm:text-[11px] font-mono text-[#171615]">
                     Correlates telemetry clusters → Analyzes failure codes → Proposes bounded recovery plan.
                   </p>
                 </div>
 
                 {/* Truth Boundary Dividing Gate */}
-                <div className="relative my-1.5 sm:my-2 py-1 flex items-center justify-center">
+                <div className="relative my-1 sm:my-1.5 py-0.5 flex items-center justify-center">
                   <div className="absolute inset-0 flex items-center">
                     <div className="w-full border-t-2 border-dashed border-[#64131C]/40" />
                   </div>
-                  <div className="relative px-3 py-1 rounded-full bg-[#64131C] text-[#FAF8F5] font-mono text-[9px] uppercase tracking-widest font-black shadow-sm flex items-center gap-1">
+                  <div className="relative px-2.5 py-0.5 rounded-full bg-[#64131C] text-[#FAF8F5] font-mono text-[8px] sm:text-[9px] uppercase tracking-widest font-black shadow-sm flex items-center gap-1">
                     <Lock className="w-2.5 h-2.5" />
                     <span>TRUTH BOUNDARY // DETERMINISTIC SAFETY GOVERNOR</span>
                   </div>
                 </div>
 
                 {/* Layer 2: Deterministic Policy Gates */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 text-center font-mono text-[10px]">
-                  <div className="p-1.5 sm:p-2 rounded bg-white border border-[#171615]/10">
-                    <span className="font-bold text-[#64131C] block">GATE 01</span>
-                    <span className="text-[9px] text-[#6E6A64]">Idempotency Lock</span>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 sm:gap-1.5 text-center font-mono text-[9px] sm:text-[10px]">
+                  <div className="p-1 sm:p-1.5 rounded bg-white border border-[#171615]/10">
+                    <span className="font-bold text-[#64131C] block text-[8px] sm:text-[9px]">GATE 01</span>
+                    <span className="text-[8px] text-[#6E6A64]">Idempotency</span>
                   </div>
-                  <div className="p-1.5 sm:p-2 rounded bg-white border border-[#171615]/10">
-                    <span className="font-bold text-[#64131C] block">GATE 02</span>
-                    <span className="text-[9px] text-[#6E6A64]">Max ₹ Threshold</span>
+                  <div className="p-1 sm:p-1.5 rounded bg-white border border-[#171615]/10">
+                    <span className="font-bold text-[#64131C] block text-[8px] sm:text-[9px]">GATE 02</span>
+                    <span className="text-[8px] text-[#6E6A64]">Max ₹ Cap</span>
                   </div>
-                  <div className="p-1.5 sm:p-2 rounded bg-white border border-[#171615]/10">
-                    <span className="font-bold text-[#64131C] block">GATE 03</span>
-                    <span className="text-[9px] text-[#6E6A64]">State Transition</span>
+                  <div className="p-1 sm:p-1.5 rounded bg-white border border-[#171615]/10">
+                    <span className="font-bold text-[#64131C] block text-[8px] sm:text-[9px]">GATE 03</span>
+                    <span className="text-[8px] text-[#6E6A64]">State Lock</span>
                   </div>
-                  <div className="p-1.5 sm:p-2 rounded bg-white border border-[#171615]/10">
-                    <span className="font-bold text-[#64131C] block">GATE 04</span>
-                    <span className="text-[9px] text-[#6E6A64]">Blast Radius Rate</span>
+                  <div className="p-1 sm:p-1.5 rounded bg-white border border-[#171615]/10">
+                    <span className="font-bold text-[#64131C] block text-[8px] sm:text-[9px]">GATE 04</span>
+                    <span className="text-[8px] text-[#6E6A64]">Blast Radius</span>
                   </div>
                 </div>
 
                 {/* Layer 3: Execution & Signed Reconciliation */}
-                <div className="p-2.5 sm:p-3 rounded-xl bg-white border border-[#171615]/10 shadow-2xs mt-1 sm:mt-2">
-                  <div className="flex items-center justify-between text-[10px] font-mono mb-1">
-                    <span className="text-[#6E6A64] font-bold flex items-center gap-1.5">
-                      <ShieldCheck className="w-3 h-3 text-emerald-700" />
+                <div className="p-2 sm:p-2.5 rounded-lg bg-white border border-[#171615]/10 shadow-2xs mt-1">
+                  <div className="flex items-center justify-between text-[9px] sm:text-[10px] font-mono mb-0.5">
+                    <span className="text-[#6E6A64] font-bold flex items-center gap-1">
+                      <ShieldCheck className="w-2.5 sm:w-3 h-2.5 sm:h-3 text-emerald-700" />
                       STAGE 03 // EXECUTION &amp; RECONCILIATION
                     </span>
-                    <span className="text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                      EXACTLY-ONCE JOURNAL
+                    <span className="text-emerald-800 bg-emerald-50 px-1 py-0.5 rounded border border-emerald-200 text-[8px] sm:text-[9px]">
+                      EXACTLY-ONCE
                     </span>
                   </div>
-                  <p className="text-[11px] font-mono text-[#171615]">
+                  <p className="text-[10px] sm:text-[11px] font-mono text-[#171615]">
                     Razorpay Test API link generation → Raw-Byte HMAC signature verification → Immutable ledger settlement.
                   </p>
                 </div>
@@ -484,7 +612,7 @@ const SentinelCard: React.FC = () => {
             )}
 
             {/* Editorial Caption Bar */}
-            <div className="px-3.5 py-2 bg-white border-t border-[#171615]/8 flex items-center justify-between text-[11px] font-mono text-[#6E6A64]">
+            <div className="px-3 py-1.5 sm:py-2 bg-white border-t border-[#171615]/8 flex items-center justify-between text-[10px] sm:text-[11px] font-mono text-[#6E6A64] shrink-0">
               <span className="truncate pr-2">
                 {activeTab === 'console'
                   ? 'Fig 2.1 — Live Incident 7B47C4EE recovery execution with verified evidence ledger.'
@@ -499,7 +627,7 @@ const SentinelCard: React.FC = () => {
         <div className="order-2 lg:order-1 lg:col-span-5 flex flex-col justify-between">
           <div>
             {/* Central Typographic Centerpiece */}
-            <div className="my-2.5 sm:my-3.5 py-2.5 border-y border-[#171615]/10 flex flex-col items-center text-center">
+            <div className="my-2 sm:my-3 py-1.5 sm:py-2 border-y border-[#171615]/10 flex flex-col items-center text-center">
               <div className="font-black text-xs sm:text-sm md:text-base uppercase tracking-wider text-[#171615] leading-snug space-y-0.5">
                 <div>AI PROPOSES.</div>
                 <div className="text-[#6E6A64]">EVIDENCE SUPPORTS.</div>
@@ -510,9 +638,9 @@ const SentinelCard: React.FC = () => {
             </div>
 
             {/* Context & Architecture Split */}
-            <div className="space-y-2.5">
+            <div className="space-y-2 sm:space-y-2.5">
               <div>
-                <span className="font-mono text-[10px] uppercase tracking-widest text-[#6E6A64] font-bold block mb-0.5">
+                <span className="font-mono text-[9px] sm:text-[10px] uppercase tracking-widest text-[#6E6A64] font-bold block mb-0.5">
                   01 // PROBLEM: PAYMENT FAILURE LEAKAGE
                 </span>
                 <p className="text-xs text-[#171615] leading-relaxed">
@@ -521,7 +649,7 @@ const SentinelCard: React.FC = () => {
               </div>
 
               <div>
-                <span className="font-mono text-[10px] uppercase tracking-widest text-[#64131C] font-bold block mb-0.5">
+                <span className="font-mono text-[9px] sm:text-[10px] uppercase tracking-widest text-[#64131C] font-bold block mb-0.5">
                   02 // ARCHITECTURE: GOVERNED SAFETY GATES
                 </span>
                 <p className="text-xs text-[#171615] leading-relaxed">
@@ -532,32 +660,32 @@ const SentinelCard: React.FC = () => {
           </div>
 
           {/* Deterministic Verification Ledger */}
-          <div className="mt-3.5 pt-3 border-t border-[#171615]/10">
-            <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 text-center text-xs font-mono">
-              <div className="p-1.5 rounded bg-[#FAF8F5] border border-[#171615]/8">
+          <div className="mt-3 sm:mt-3.5 pt-2 sm:pt-3 border-t border-[#171615]/10">
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-1 sm:gap-1.5 text-center text-xs font-mono">
+              <div className="p-1 sm:p-1.5 rounded bg-[#FAF8F5] border border-[#171615]/8">
                 <span className="font-black text-[#171615] block text-xs sm:text-sm">10,000+</span>
-                <span className="text-[9px] text-[#6E6A64]">BENCHMARKS</span>
+                <span className="text-[8px] sm:text-[9px] text-[#6E6A64]">BENCHMARKS</span>
               </div>
-              <div className="p-1.5 rounded bg-[#FAF8F5] border border-[#171615]/8">
+              <div className="p-1 sm:p-1.5 rounded bg-[#FAF8F5] border border-[#171615]/8">
                 <span className="font-black text-emerald-800 block text-xs sm:text-sm">8 / 8</span>
-                <span className="text-[9px] text-[#6E6A64]">SAFETY GATES</span>
+                <span className="text-[8px] sm:text-[9px] text-[#6E6A64]">SAFETY GATES</span>
               </div>
-              <div className="p-1.5 rounded bg-[#FAF8F5] border border-[#171615]/8">
+              <div className="p-1 sm:p-1.5 rounded bg-[#FAF8F5] border border-[#171615]/8">
                 <span className="font-black text-[#171615] block text-xs sm:text-sm">IDEMPOTENT</span>
-                <span className="text-[9px] text-[#6E6A64]">PAYMENT LINKS</span>
+                <span className="text-[8px] sm:text-[9px] text-[#6E6A64]">LINKS</span>
               </div>
-              <div className="p-1.5 rounded bg-[#FAF8F5] border border-[#171615]/8">
+              <div className="p-1 sm:p-1.5 rounded bg-[#FAF8F5] border border-[#171615]/8">
                 <span className="font-black text-[#171615] block text-xs sm:text-sm">RAW HMAC</span>
-                <span className="text-[9px] text-[#6E6A64]">SIGNED HOOKS</span>
+                <span className="text-[8px] sm:text-[9px] text-[#6E6A64]">SIGNED HOOKS</span>
               </div>
-              <div className="p-1.5 rounded bg-[#FAF8F5] border border-[#171615]/8 col-span-3 sm:col-span-1">
+              <div className="p-1 sm:p-1.5 rounded bg-[#FAF8F5] border border-[#171615]/8 col-span-3 sm:col-span-1">
                 <span className="font-black text-[#171615] block text-xs sm:text-sm">EXACTLY-1</span>
-                <span className="text-[9px] text-[#6E6A64]">RECONCILED</span>
+                <span className="text-[8px] sm:text-[9px] text-[#6E6A64]">RECONCILED</span>
               </div>
             </div>
 
-            <div className="mt-3 pt-2 border-t border-[#171615]/8 flex items-center justify-between flex-wrap gap-2">
-              <span className="text-[11px] font-mono text-emerald-800 font-medium">
+            <div className="mt-2.5 sm:mt-3 pt-1.5 sm:pt-2 border-t border-[#171615]/8 flex items-center justify-between flex-wrap gap-2">
+              <span className="text-[10px] sm:text-[11px] font-mono text-emerald-800 font-medium">
                 ✓ 10,000+ deterministic cases · Zero duplicate payments
               </span>
               <div className="flex items-center gap-2">
@@ -565,7 +693,7 @@ const SentinelCard: React.FC = () => {
                   href="https://github.com/sufibuildwith-py/Sentinel"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-3 py-1 rounded-full bg-[#FAF8F5] hover:bg-[#F5F2EA] border border-[#171615]/10 text-[#171615] text-xs font-mono uppercase tracking-wider inline-flex items-center gap-1 transition-colors"
+                  className="px-2.5 sm:px-3 py-1 rounded-full bg-[#FAF8F5] hover:bg-[#F5F2EA] border border-[#171615]/10 text-[#171615] text-[11px] sm:text-xs font-mono uppercase tracking-wider inline-flex items-center gap-1 transition-colors cursor-pointer"
                 >
                   <Github className="w-3.5 h-3.5" />
                   <span>Source</span>
@@ -574,7 +702,7 @@ const SentinelCard: React.FC = () => {
                   href="https://sentinelxops.vercel.app"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-3 py-1 rounded-full bg-[#171615] hover:bg-[#64131C] text-[#FAF8F5] text-xs font-mono uppercase tracking-wider inline-flex items-center gap-1 transition-colors"
+                  className="px-2.5 sm:px-3 py-1 rounded-full bg-[#171615] hover:bg-[#64131C] text-[#FAF8F5] text-[11px] sm:text-xs font-mono uppercase tracking-wider inline-flex items-center gap-1 transition-colors cursor-pointer"
                 >
                   <span>Live Demo</span>
                   <ExternalLink className="w-3 h-3" />
@@ -593,14 +721,14 @@ const SentinelCard: React.FC = () => {
    ========================================================================= */
 const GuideInCard: React.FC = () => {
   return (
-    <div className="flex flex-col justify-between h-full w-full">
+    <div className="flex flex-col justify-between h-full w-full overflow-y-auto lg:overflow-hidden pr-0.5">
       {/* 1. Header: Project Number + Title + Domain Badge */}
-      <div className="flex flex-wrap items-baseline justify-between gap-3 pb-3 sm:pb-4 border-b border-[#171615]/10">
+      <div className="flex flex-wrap items-baseline justify-between gap-3 pb-3 sm:pb-4 border-b border-[#171615]/10 shrink-0">
         <div className="flex items-baseline gap-3 sm:gap-4">
-          <span className="font-mono text-3xl sm:text-4xl font-black text-[#64131C] tracking-tighter">
+          <span className="font-mono text-2xl sm:text-4xl font-black text-[#64131C] tracking-tighter">
             03
           </span>
-          <h3 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tight text-[#171615]">
+          <h3 className="text-xl sm:text-3xl md:text-4xl font-black uppercase tracking-tight text-[#171615]">
             GUIDEIN
           </h3>
         </div>
@@ -610,90 +738,90 @@ const GuideInCard: React.FC = () => {
       </div>
 
       {/* Main Grid: Responsive Ordering */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-7 lg:gap-8 xl:gap-10 items-stretch mt-4 sm:mt-5 flex-1">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8 xl:gap-10 items-stretch mt-3 sm:mt-5 flex-1 min-h-0">
         {/* PRIMARY VISUAL ARTIFACT (Order-1 on Mobile, Order-2 on Desktop) */}
-        <div className="order-1 lg:order-2 lg:col-span-7 flex flex-col justify-center">
-          <div className="rounded-2xl border border-[#171615]/10 bg-[#FAF8F5] overflow-hidden shadow-sm flex flex-col h-full justify-between">
+        <div className="order-1 lg:order-2 lg:col-span-7 flex flex-col justify-center min-h-0">
+          <div className="rounded-xl sm:rounded-2xl border border-[#171615]/10 bg-[#FAF8F5] overflow-hidden shadow-2xs flex flex-col h-full justify-between">
             {/* Chrome Bar */}
-            <div className="px-3.5 py-2 sm:py-2.5 bg-[#F0EDE4] border-b border-[#171615]/10 flex items-center justify-between gap-2">
+            <div className="px-3 sm:px-3.5 py-1.5 sm:py-2.5 bg-[#F0EDE4] border-b border-[#171615]/10 flex items-center justify-between gap-2 shrink-0">
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#171615]/20 inline-block" />
-                <span className="w-2.5 h-2.5 rounded-full bg-[#171615]/20 inline-block" />
-                <span className="w-2.5 h-2.5 rounded-full bg-[#171615]/20 inline-block" />
-                <span className="ml-2 font-mono text-[10px] text-[#6E6A64] tracking-wider uppercase">
+                <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-[#171615]/20 inline-block" />
+                <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-[#171615]/20 inline-block" />
+                <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-[#171615]/20 inline-block" />
+                <span className="ml-2 font-mono text-[9px] sm:text-[10px] text-[#6E6A64] tracking-wider uppercase">
                   guidein.controlplane // SYSTEM GRAPH v18.4
                 </span>
               </div>
-              <div className="px-2 py-0.5 rounded bg-white text-[9px] font-mono uppercase tracking-widest text-[#64131C] font-bold border border-[#171615]/10">
+              <div className="px-2 py-0.5 rounded bg-white text-[8px] sm:text-[9px] font-mono uppercase tracking-widest text-[#64131C] font-bold border border-[#171615]/10">
                 100% RECALL PROVEN
               </div>
             </div>
 
             {/* Native SVG / Editorial System Graph Visual */}
-            <div className="aspect-[16/10] sm:aspect-[16/9.5] w-full bg-[#FAF8F5] p-3.5 sm:p-5 flex flex-col justify-between relative overflow-hidden">
+            <div className="aspect-[16/9.5] w-full bg-[#FAF8F5] p-2.5 sm:p-4 flex flex-col justify-between relative overflow-hidden flex-1 min-h-[180px]">
               {/* Pipeline Step Sequence */}
-              <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 sm:gap-2 text-center font-mono text-[10px]">
-                <div className="p-1.5 sm:p-2 rounded-lg bg-white border border-[#171615]/10 shadow-2xs">
-                  <span className="text-[#6E6A64] block text-[9px]">INGRESS</span>
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-1 sm:gap-2 text-center font-mono text-[9px] sm:text-[10px]">
+                <div className="p-1 sm:p-1.5 rounded-lg bg-white border border-[#171615]/10 shadow-2xs">
+                  <span className="text-[#6E6A64] block text-[8px] sm:text-[9px]">INGRESS</span>
                   <span className="font-bold text-[#171615]">GitHub Hook</span>
                 </div>
-                <div className="p-1.5 sm:p-2 rounded-lg bg-white border border-[#171615]/10 shadow-2xs">
-                  <span className="text-[#6E6A64] block text-[9px]">HMAC GATE</span>
+                <div className="p-1 sm:p-1.5 rounded-lg bg-white border border-[#171615]/10 shadow-2xs">
+                  <span className="text-[#6E6A64] block text-[8px] sm:text-[9px]">HMAC GATE</span>
                   <span className="font-bold text-[#64131C]">Raw-Byte Verify</span>
                 </div>
-                <div className="p-1.5 sm:p-2 rounded-lg bg-white border border-[#171615]/10 shadow-2xs">
-                  <span className="text-[#6E6A64] block text-[9px]">PERSISTENCE</span>
+                <div className="p-1 sm:p-1.5 rounded-lg bg-white border border-[#171615]/10 shadow-2xs">
+                  <span className="text-[#6E6A64] block text-[8px] sm:text-[9px]">PERSISTENCE</span>
                   <span className="font-bold text-[#171615]">Outbox &amp; RLS</span>
                 </div>
-                <div className="p-1.5 sm:p-2 rounded-lg bg-white border border-[#171615]/10 shadow-2xs">
-                  <span className="text-[#6E6A64] block text-[9px]">TOPOLOGY</span>
+                <div className="p-1 sm:p-1.5 rounded-lg bg-white border border-[#171615]/10 shadow-2xs">
+                  <span className="text-[#6E6A64] block text-[8px] sm:text-[9px]">TOPOLOGY</span>
                   <span className="font-bold text-[#171615]">System Graph</span>
                 </div>
-                <div className="p-1.5 sm:p-2 rounded-lg bg-emerald-50 border border-emerald-300 shadow-2xs col-span-3 sm:col-span-1">
-                  <span className="text-emerald-700 block text-[9px]">DECISION</span>
+                <div className="p-1 sm:p-1.5 rounded-lg bg-emerald-50 border border-emerald-300 shadow-2xs col-span-3 sm:col-span-1">
+                  <span className="text-emerald-700 block text-[8px] sm:text-[9px]">DECISION</span>
                   <span className="font-bold text-emerald-900">Safe To Ship</span>
                 </div>
               </div>
 
               {/* Central Graph Network Visual */}
-              <div className="my-2 p-3 sm:p-3.5 rounded-xl bg-white border border-[#171615]/10 relative shadow-2xs flex flex-col justify-center">
-                <div className="flex items-center justify-between mb-2 border-b border-[#171615]/8 pb-1.5">
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-[#64131C] font-bold flex items-center gap-1.5">
-                    <Workflow className="w-3.5 h-3.5" />
+              <div className="my-1.5 p-2 sm:p-3 rounded-xl bg-white border border-[#171615]/10 relative shadow-2xs flex flex-col justify-center">
+                <div className="flex items-center justify-between mb-1.5 border-b border-[#171615]/8 pb-1">
+                  <span className="font-mono text-[9px] sm:text-[10px] uppercase tracking-wider text-[#64131C] font-bold flex items-center gap-1">
+                    <Workflow className="w-3 h-3" />
                     DETERMINISTIC DEPENDENCY BLAST-RADIUS ENGINE
                   </span>
-                  <span className="font-mono text-[10px] text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-semibold">
-                    BLAST RADIUS: CONSTRAINED
+                  <span className="font-mono text-[8px] sm:text-[9px] text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 font-semibold">
+                    BLAST RADIUS: LOW
                   </span>
                 </div>
 
                 {/* Connected Entity Nodes */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-[10px] font-mono text-[#171615]">
-                  <div className="p-1.5 rounded bg-[#FAF8F5] border border-[#171615]/8">
-                    <span className="text-[#6E6A64] block text-[9px]">SERVICE NODE</span>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 sm:gap-1.5 text-[9px] sm:text-[10px] font-mono text-[#171615]">
+                  <div className="p-1 sm:p-1.5 rounded bg-[#FAF8F5] border border-[#171615]/8">
+                    <span className="text-[#6E6A64] block text-[8px]">SERVICE</span>
                     <span className="font-bold">auth-router.ts</span>
-                    <span className="text-emerald-700 block text-[9px] mt-0.5">✓ 0 side-effects</span>
+                    <span className="text-emerald-700 block text-[8px] mt-0.5">✓ Safe</span>
                   </div>
-                  <div className="p-1.5 rounded bg-[#FAF8F5] border border-[#171615]/8">
-                    <span className="text-[#6E6A64] block text-[9px]">API CONTRACT</span>
+                  <div className="p-1 sm:p-1.5 rounded bg-[#FAF8F5] border border-[#171615]/8">
+                    <span className="text-[#6E6A64] block text-[8px]">API CONTRACT</span>
                     <span className="font-bold">/v1/charge-token</span>
-                    <span className="text-emerald-700 block text-[9px] mt-0.5">✓ Backward-compat</span>
+                    <span className="text-emerald-700 block text-[8px] mt-0.5">✓ Verified</span>
                   </div>
-                  <div className="p-1.5 rounded bg-[#FAF8F5] border border-[#171615]/8">
-                    <span className="text-[#6E6A64] block text-[9px]">SCHEMA</span>
+                  <div className="p-1 sm:p-1.5 rounded bg-[#FAF8F5] border border-[#171615]/8">
+                    <span className="text-[#6E6A64] block text-[8px]">SCHEMA</span>
                     <span className="font-bold">V18_outbox</span>
-                    <span className="text-emerald-700 block text-[9px] mt-0.5">✓ RLS verified</span>
+                    <span className="text-emerald-700 block text-[8px] mt-0.5">✓ Force RLS</span>
                   </div>
-                  <div className="p-1.5 rounded bg-[#FAF8F5] border border-[#171615]/8">
-                    <span className="text-[#6E6A64] block text-[9px]">EDGE INTEGRITY</span>
+                  <div className="p-1 sm:p-1.5 rounded bg-[#FAF8F5] border border-[#171615]/8">
+                    <span className="text-[#6E6A64] block text-[8px]">INTEGRITY</span>
                     <span className="font-bold">2,132 Edges</span>
-                    <span className="text-emerald-700 block text-[9px] mt-0.5">✓ 100% Recall</span>
+                    <span className="text-emerald-700 block text-[8px] mt-0.5">✓ 100% Recall</span>
                   </div>
                 </div>
               </div>
 
               {/* Bottom Invariant Banner */}
-              <div className="p-2 rounded-lg bg-[#FAF8F5] border border-[#171615]/8 flex items-center justify-between text-[11px] font-mono">
+              <div className="p-1.5 sm:p-2 rounded-lg bg-[#FAF8F5] border border-[#171615]/8 flex items-center justify-between text-[10px] sm:text-[11px] font-mono">
                 <span className="text-[#171615]">
                   <strong className="text-[#64131C]">INVARIANT:</strong> PostgreSQL 18 FORCE RLS prevents cross-tenant graph leakage.
                 </span>
@@ -702,7 +830,7 @@ const GuideInCard: React.FC = () => {
             </div>
 
             {/* Caption Bar */}
-            <div className="px-3.5 py-2 bg-white border-t border-[#171615]/8 flex items-center justify-between text-[11px] font-mono text-[#6E6A64]">
+            <div className="px-3 py-1.5 sm:py-2 bg-white border-t border-[#171615]/8 flex items-center justify-between text-[10px] sm:text-[11px] font-mono text-[#6E6A64] shrink-0">
               <span className="truncate pr-2">Fig 3.1 — Deterministic dependency graph mapping code symbol blast radius before production release.</span>
               <span className="text-[#64131C] font-bold whitespace-nowrap">CONTROL PLANE</span>
             </div>
@@ -713,66 +841,66 @@ const GuideInCard: React.FC = () => {
         <div className="order-2 lg:order-1 lg:col-span-5 flex flex-col justify-between">
           <div>
             {/* Large Editorial Statement */}
-            <p className="text-sm sm:text-base md:text-lg font-bold uppercase tracking-tight text-[#171615] leading-snug">
+            <p className="text-xs sm:text-base md:text-lg font-bold uppercase tracking-tight text-[#171615] leading-snug">
               “Evidence-governed control plane for deciding software change safety.”
             </p>
 
             {/* Verified Metrics Display Block */}
-            <div className="grid grid-cols-3 gap-2 my-3 sm:my-3.5 py-2.5 border-y border-[#171615]/10 text-center">
+            <div className="grid grid-cols-3 gap-1.5 sm:gap-2 my-2.5 sm:my-3 py-2 sm:py-2.5 border-y border-[#171615]/10 text-center">
               <div>
-                <span className="font-mono text-base sm:text-xl font-black text-[#171615] block tracking-tight">
+                <span className="font-mono text-sm sm:text-lg font-black text-[#171615] block tracking-tight">
                   189 / 189
                 </span>
-                <span className="text-[9px] font-mono uppercase tracking-widest text-[#6E6A64] block">
+                <span className="text-[8px] sm:text-[9px] font-mono uppercase tracking-widest text-[#6E6A64] block">
                   TESTS PASSED
                 </span>
               </div>
               <div>
-                <span className="font-mono text-base sm:text-xl font-black text-[#64131C] block tracking-tight">
+                <span className="font-mono text-sm sm:text-lg font-black text-[#64131C] block tracking-tight">
                   2,132
                 </span>
-                <span className="text-[9px] font-mono uppercase tracking-widest text-[#6E6A64] block">
+                <span className="text-[8px] sm:text-[9px] font-mono uppercase tracking-widest text-[#6E6A64] block">
                   EXPECTED EDGES
                 </span>
               </div>
               <div>
-                <span className="font-mono text-base sm:text-xl font-black text-emerald-800 block tracking-tight">
+                <span className="font-mono text-sm sm:text-lg font-black text-emerald-800 block tracking-tight">
                   100%
                 </span>
-                <span className="text-[9px] font-mono uppercase tracking-widest text-[#6E6A64] block">
+                <span className="text-[8px] sm:text-[9px] font-mono uppercase tracking-widest text-[#6E6A64] block">
                   EDGE RECALL
                 </span>
               </div>
               <div>
-                <span className="font-mono text-base sm:text-xl font-black text-emerald-800 block tracking-tight">
+                <span className="font-mono text-sm sm:text-lg font-black text-emerald-800 block tracking-tight">
                   0
                 </span>
-                <span className="text-[9px] font-mono uppercase tracking-widest text-[#6E6A64] block">
+                <span className="text-[8px] sm:text-[9px] font-mono uppercase tracking-widest text-[#6E6A64] block">
                   FALSE EDGES
                 </span>
               </div>
               <div>
-                <span className="font-mono text-base sm:text-xl font-black text-[#171615] block tracking-tight">
+                <span className="font-mono text-sm sm:text-lg font-black text-[#171615] block tracking-tight">
                   50,000
                 </span>
-                <span className="text-[9px] font-mono uppercase tracking-widest text-[#6E6A64] block">
+                <span className="text-[8px] sm:text-[9px] font-mono uppercase tracking-widest text-[#6E6A64] block">
                   NODES TESTED
                 </span>
               </div>
               <div>
-                <span className="font-mono text-base sm:text-xl font-black text-[#171615] block tracking-tight">
+                <span className="font-mono text-sm sm:text-lg font-black text-[#171615] block tracking-tight">
                   250,000
                 </span>
-                <span className="text-[9px] font-mono uppercase tracking-widest text-[#6E6A64] block">
+                <span className="text-[8px] sm:text-[9px] font-mono uppercase tracking-widest text-[#6E6A64] block">
                   GRAPH EDGES
                 </span>
               </div>
             </div>
 
             {/* Context & Architecture */}
-            <div className="space-y-2.5">
+            <div className="space-y-2 sm:space-y-2.5">
               <div>
-                <span className="font-mono text-[10px] uppercase tracking-widest text-[#6E6A64] font-bold block mb-0.5">
+                <span className="font-mono text-[9px] sm:text-[10px] uppercase tracking-widest text-[#6E6A64] font-bold block mb-0.5">
                   01 // PROBLEM: BLIND CODE SHIPMENTS
                 </span>
                 <p className="text-xs text-[#171615] leading-relaxed">
@@ -780,7 +908,7 @@ const GuideInCard: React.FC = () => {
                 </p>
               </div>
               <div>
-                <span className="font-mono text-[10px] uppercase tracking-widest text-[#64131C] font-bold block mb-0.5">
+                <span className="font-mono text-[9px] sm:text-[10px] uppercase tracking-widest text-[#64131C] font-bold block mb-0.5">
                   02 // ARCHITECTURE: DETERMINISTIC GRAPH
                 </span>
                 <p className="text-xs text-[#171615] leading-relaxed">
@@ -791,15 +919,15 @@ const GuideInCard: React.FC = () => {
           </div>
 
           {/* Footer Actions */}
-          <div className="mt-4 pt-3 border-t border-[#171615]/10 flex items-center justify-between flex-wrap gap-2">
-            <span className="text-[11px] font-mono text-emerald-800 font-medium">
+          <div className="mt-3 sm:mt-4 pt-2 sm:pt-3 border-t border-[#171615]/10 flex items-center justify-between flex-wrap gap-2">
+            <span className="text-[10px] sm:text-[11px] font-mono text-emerald-800 font-medium">
               ✓ Validated scalability to 50k nodes &amp; 250k edges · 0 false edges
             </span>
             <a
               href="https://github.com/sufibuildwith-py/GuideIn"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-3.5 py-1.5 rounded-full bg-[#171615] hover:bg-[#64131C] text-[#FAF8F5] text-xs font-mono uppercase tracking-wider inline-flex items-center gap-1.5 transition-colors"
+              className="px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-[#171615] hover:bg-[#64131C] text-[#FAF8F5] text-[11px] sm:text-xs font-mono uppercase tracking-wider inline-flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <Github className="w-3.5 h-3.5" />
               <span>Inspect Repository</span>
@@ -816,14 +944,14 @@ const GuideInCard: React.FC = () => {
    ========================================================================= */
 const OfflineDocumentAdvisorCard: React.FC = () => {
   return (
-    <div className="flex flex-col justify-between h-full w-full">
+    <div className="flex flex-col justify-between h-full w-full overflow-y-auto lg:overflow-hidden pr-0.5">
       {/* 1. Header: Project Number + Title + Domain Badge */}
-      <div className="flex flex-wrap items-baseline justify-between gap-3 pb-3 sm:pb-4 border-b border-[#171615]/10">
+      <div className="flex flex-wrap items-baseline justify-between gap-3 pb-3 sm:pb-4 border-b border-[#171615]/10 shrink-0">
         <div className="flex items-baseline gap-3 sm:gap-4">
-          <span className="font-mono text-3xl sm:text-4xl font-black text-[#64131C] tracking-tighter">
+          <span className="font-mono text-2xl sm:text-4xl font-black text-[#64131C] tracking-tighter">
             04
           </span>
-          <h3 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tight text-[#171615]">
+          <h3 className="text-xl sm:text-3xl md:text-4xl font-black uppercase tracking-tight text-[#171615]">
             OFFLINE DOC ADVISOR
           </h3>
         </div>
@@ -833,77 +961,77 @@ const OfflineDocumentAdvisorCard: React.FC = () => {
       </div>
 
       {/* Main Grid: Responsive Ordering */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-7 lg:gap-8 xl:gap-10 items-stretch mt-4 sm:mt-5 flex-1">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8 xl:gap-10 items-stretch mt-3 sm:mt-5 flex-1 min-h-0">
         {/* PRIMARY VISUAL ARTIFACT (Order-1 on Mobile, Order-2 on Desktop) */}
-        <div className="order-1 lg:order-2 lg:col-span-7 flex flex-col justify-center">
-          <div className="rounded-2xl border border-[#171615]/10 bg-[#FAF8F5] overflow-hidden shadow-sm flex flex-col h-full justify-between">
+        <div className="order-1 lg:order-2 lg:col-span-7 flex flex-col justify-center min-h-0">
+          <div className="rounded-xl sm:rounded-2xl border border-[#171615]/10 bg-[#FAF8F5] overflow-hidden shadow-2xs flex flex-col h-full justify-between">
             {/* Chrome Bar */}
-            <div className="px-3.5 py-2 sm:py-2.5 bg-[#F0EDE4] border-b border-[#171615]/10 flex items-center justify-between gap-2">
+            <div className="px-3 sm:px-3.5 py-1.5 sm:py-2.5 bg-[#F0EDE4] border-b border-[#171615]/10 flex items-center justify-between gap-2 shrink-0">
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#171615]/20 inline-block" />
-                <span className="w-2.5 h-2.5 rounded-full bg-[#171615]/20 inline-block" />
-                <span className="w-2.5 h-2.5 rounded-full bg-[#171615]/20 inline-block" />
-                <span className="ml-2 font-mono text-[10px] text-[#6E6A64] tracking-wider uppercase">
+                <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-[#171615]/20 inline-block" />
+                <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-[#171615]/20 inline-block" />
+                <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-[#171615]/20 inline-block" />
+                <span className="ml-2 font-mono text-[9px] sm:text-[10px] text-[#6E6A64] tracking-wider uppercase">
                   doc-advisor.desktop // LOCAL RUNTIME
                 </span>
               </div>
-              <div className="px-2 py-0.5 rounded bg-emerald-50 text-[9px] font-mono uppercase tracking-widest text-emerald-800 font-bold border border-emerald-300">
+              <div className="px-2 py-0.5 rounded bg-emerald-50 text-[8px] sm:text-[9px] font-mono uppercase tracking-widest text-emerald-800 font-bold border border-emerald-300">
                 100% AIR-GAPPED
               </div>
             </div>
 
             {/* Visual Document Pipeline Monograph */}
-            <div className="aspect-[16/10] sm:aspect-[16/9.5] w-full bg-[#FAF8F5] p-3.5 sm:p-5 flex flex-col justify-between overflow-hidden">
+            <div className="aspect-[16/9.5] w-full bg-[#FAF8F5] p-2.5 sm:p-4 flex flex-col justify-between overflow-hidden flex-1 min-h-[180px]">
               {/* Document Index Cards */}
               <div>
-                <span className="font-mono text-[10px] uppercase tracking-widest text-[#6E6A64] font-bold block mb-1.5 text-center">
+                <span className="font-mono text-[9px] sm:text-[10px] uppercase tracking-widest text-[#6E6A64] font-bold block mb-1 text-center">
                   SUPPORTED IDENTITY SPECIFICATIONS
                 </span>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 font-mono text-center text-xs">
-                  <div className="p-1.5 sm:p-2 rounded-lg bg-white border border-[#171615]/10 shadow-2xs">
-                    <span className="font-black text-[#171615] block">AADHAAR</span>
-                    <span className="text-[9px] text-[#6E6A64]">UIDAI QR &amp; Pattern</span>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 sm:gap-1.5 font-mono text-center text-xs">
+                  <div className="p-1 sm:p-1.5 rounded-lg bg-white border border-[#171615]/10 shadow-2xs">
+                    <span className="font-black text-[#171615] block text-[10px] sm:text-xs">AADHAAR</span>
+                    <span className="text-[8px] text-[#6E6A64]">UIDAI QR &amp; Pattern</span>
                   </div>
-                  <div className="p-1.5 sm:p-2 rounded-lg bg-white border border-[#171615]/10 shadow-2xs">
-                    <span className="font-black text-[#171615] block">PAN</span>
-                    <span className="text-[9px] text-[#6E6A64]">Alphanumeric Regex</span>
+                  <div className="p-1 sm:p-1.5 rounded-lg bg-white border border-[#171615]/10 shadow-2xs">
+                    <span className="font-black text-[#171615] block text-[10px] sm:text-xs">PAN</span>
+                    <span className="text-[8px] text-[#6E6A64]">Alphanumeric Regex</span>
                   </div>
-                  <div className="p-1.5 sm:p-2 rounded-lg bg-white border border-[#171615]/10 shadow-2xs">
-                    <span className="font-black text-[#171615] block">VOTER ID</span>
-                    <span className="text-[9px] text-[#6E6A64]">EPIC Validation</span>
+                  <div className="p-1 sm:p-1.5 rounded-lg bg-white border border-[#171615]/10 shadow-2xs">
+                    <span className="font-black text-[#171615] block text-[10px] sm:text-xs">VOTER ID</span>
+                    <span className="text-[8px] text-[#6E6A64]">EPIC Validation</span>
                   </div>
-                  <div className="p-1.5 sm:p-2 rounded-lg bg-white border border-[#171615]/10 shadow-2xs">
-                    <span className="font-black text-[#171615] block">PASSPORT</span>
-                    <span className="text-[9px] text-[#64131C] font-bold">MRZ ICAO 9303</span>
+                  <div className="p-1 sm:p-1.5 rounded-lg bg-white border border-[#171615]/10 shadow-2xs">
+                    <span className="font-black text-[#171615] block text-[10px] sm:text-xs">PASSPORT</span>
+                    <span className="text-[8px] text-[#64131C] font-bold">MRZ ICAO 9303</span>
                   </div>
                 </div>
               </div>
 
               {/* Offline Execution Pipeline Flow */}
-              <div className="my-1.5 sm:my-2 p-2.5 sm:p-3 rounded-xl bg-white border border-[#171615]/10 shadow-2xs">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-[#64131C] font-bold block mb-1.5">
+              <div className="my-1 sm:my-1.5 p-1.5 sm:p-2.5 rounded-xl bg-white border border-[#171615]/10 shadow-2xs">
+                <span className="font-mono text-[9px] sm:text-[10px] uppercase tracking-wider text-[#64131C] font-bold block mb-1">
                   DESKTOP OCR PROCESSING PIPELINE //
                 </span>
-                <div className="flex items-center justify-between flex-wrap gap-1 text-[10px] font-mono text-[#171615]">
-                  <span className="px-2 py-0.5 rounded bg-[#FAF8F5] border border-[#171615]/8">PDF Rasterization</span>
+                <div className="flex items-center justify-between flex-wrap gap-1 text-[9px] sm:text-[10px] font-mono text-[#171615]">
+                  <span className="px-1.5 py-0.5 rounded bg-[#FAF8F5] border border-[#171615]/8">Rasterization</span>
                   <span className="text-[#64131C]">→</span>
-                  <span className="px-2 py-0.5 rounded bg-[#FAF8F5] border border-[#171615]/8">Sharp Deskew</span>
+                  <span className="px-1.5 py-0.5 rounded bg-[#FAF8F5] border border-[#171615]/8">Sharp Deskew</span>
                   <span className="text-[#64131C]">→</span>
-                  <span className="px-2 py-0.5 rounded bg-[#FAF8F5] border border-[#171615]/8 font-bold">Tesseract Eng/Hin</span>
+                  <span className="px-1.5 py-0.5 rounded bg-[#FAF8F5] border border-[#171615]/8 font-bold">Tesseract</span>
                   <span className="text-[#64131C]">→</span>
-                  <span className="px-2 py-0.5 rounded bg-[#FAF8F5] border border-[#171615]/8">Discrepancy Check</span>
+                  <span className="px-1.5 py-0.5 rounded bg-[#FAF8F5] border border-[#171615]/8">Discrepancy</span>
                   <span className="text-[#64131C]">→</span>
-                  <span className="px-2 py-0.5 rounded bg-emerald-50 border border-emerald-300 text-emerald-800 font-bold">XLSX Export</span>
+                  <span className="px-1.5 py-0.5 rounded bg-emerald-50 border border-emerald-300 text-emerald-800 font-bold">ExcelJS</span>
                 </div>
               </div>
 
               {/* Key Invariant Callout */}
-              <div className="p-2.5 sm:p-3 rounded-xl bg-white border border-[#171615]/10 shadow-2xs">
-                <div className="flex items-center justify-between font-mono text-[10px] mb-0.5">
+              <div className="p-1.5 sm:p-2.5 rounded-xl bg-white border border-[#171615]/10 shadow-2xs">
+                <div className="flex items-center justify-between font-mono text-[9px] sm:text-[10px] mb-0.5">
                   <span className="font-bold text-[#64131C]">KEY RELIABILITY STORY //</span>
-                  <span className="text-[#6E6A64]">ZERO EMPLOYEE PC PREREQUISITES</span>
+                  <span className="text-[#6E6A64]">ZERO CLIENT PREREQUISITES</span>
                 </div>
-                <div className="flex items-center gap-3 font-mono text-xs text-[#171615] font-black">
+                <div className="flex items-center gap-2 sm:gap-3 font-mono text-[10px] sm:text-xs text-[#171615] font-black">
                   <span>NO NODE.JS</span>
                   <span className="text-[#64131C]">·</span>
                   <span>NO NPM</span>
@@ -912,14 +1040,14 @@ const OfflineDocumentAdvisorCard: React.FC = () => {
                   <span className="text-[#64131C]">·</span>
                   <span className="text-emerald-800">100% AIR-GAPPED</span>
                 </div>
-                <p className="text-[11px] text-[#6E6A64] mt-0.5 leading-snug">
+                <p className="text-[10px] sm:text-[11px] text-[#6E6A64] mt-0.5 leading-snug">
                   Packaged native workers overcome path failures in client Windows installers, eliminating external runtime dependencies.
                 </p>
               </div>
             </div>
 
             {/* Caption Bar */}
-            <div className="px-3.5 py-2 bg-white border-t border-[#171615]/8 flex items-center justify-between text-[11px] font-mono text-[#6E6A64]">
+            <div className="px-3 py-1.5 sm:py-2 bg-white border-t border-[#171615]/8 flex items-center justify-between text-[10px] sm:text-[11px] font-mono text-[#6E6A64] shrink-0">
               <span className="truncate pr-2">Fig 4.1 — Self-contained bilingual OCR extraction pipeline with local discrepancy verification.</span>
               <span className="text-[#64131C] font-bold whitespace-nowrap">LOCAL RUNTIME</span>
             </div>
@@ -930,14 +1058,14 @@ const OfflineDocumentAdvisorCard: React.FC = () => {
         <div className="order-2 lg:order-1 lg:col-span-5 flex flex-col justify-between">
           <div>
             {/* Large Editorial Statement */}
-            <p className="text-sm sm:text-base md:text-lg font-bold uppercase tracking-tight text-[#171615] leading-snug">
+            <p className="text-xs sm:text-base md:text-lg font-bold uppercase tracking-tight text-[#171615] leading-snug">
               “100% offline identity verification desktop tooling for high-volume operations.”
             </p>
 
             {/* Context & Architecture */}
-            <div className="space-y-3 mt-3.5 pt-3 border-t border-[#171615]/8">
+            <div className="space-y-2.5 sm:space-y-3 mt-2.5 sm:mt-3.5 pt-2.5 sm:pt-3 border-t border-[#171615]/8">
               <div>
-                <span className="font-mono text-[10px] uppercase tracking-widest text-[#6E6A64] font-bold block mb-0.5">
+                <span className="font-mono text-[9px] sm:text-[10px] uppercase tracking-widest text-[#6E6A64] font-bold block mb-0.5">
                   01 // PROBLEM: MANUAL WHATSAPP VERIFICATION
                 </span>
                 <p className="text-xs text-[#171615] leading-relaxed">
@@ -946,7 +1074,7 @@ const OfflineDocumentAdvisorCard: React.FC = () => {
               </div>
 
               <div>
-                <span className="font-mono text-[10px] uppercase tracking-widest text-[#64131C] font-bold block mb-0.5">
+                <span className="font-mono text-[9px] sm:text-[10px] uppercase tracking-widest text-[#64131C] font-bold block mb-0.5">
                   02 // ARCHITECTURE: SELF-CONTAINED LOCAL OCR
                 </span>
                 <p className="text-xs text-[#171615] leading-relaxed">
@@ -957,21 +1085,21 @@ const OfflineDocumentAdvisorCard: React.FC = () => {
           </div>
 
           {/* Footer Technical Evidence */}
-          <div className="mt-4 pt-3.5 border-t border-[#171615]/10">
-            <div className="text-xs font-mono text-[#171615] flex flex-wrap gap-2">
+          <div className="mt-3 sm:mt-4 pt-2.5 sm:pt-3.5 border-t border-[#171615]/10">
+            <div className="text-[10px] sm:text-xs font-mono text-[#171615] flex flex-wrap gap-1.5 sm:gap-2">
               <span className="text-[#64131C] font-bold">STACK:</span>
               <span>Electron · TypeScript · Node.js · Tesseract.js · Sharp · PDF.js · ExcelJS</span>
             </div>
 
-            <div className="mt-3.5 pt-2.5 border-t border-[#171615]/8 flex items-center justify-between flex-wrap gap-2">
-              <span className="text-[11px] font-mono text-emerald-800 font-medium">
+            <div className="mt-2.5 sm:mt-3.5 pt-2 sm:pt-2.5 border-t border-[#171615]/8 flex items-center justify-between flex-wrap gap-2">
+              <span className="text-[10px] sm:text-[11px] font-mono text-emerald-800 font-medium">
                 ✓ Production deployed at Ideal Web Solutions · Zero cloud API dependence
               </span>
               <a
                 href="https://github.com/sufibuildwith-py/OCR---Offline-Docs-Application"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-3.5 py-1.5 rounded-full bg-[#171615] hover:bg-[#64131C] text-[#FAF8F5] text-xs font-mono uppercase tracking-wider inline-flex items-center gap-1.5 transition-colors"
+                className="px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-[#171615] hover:bg-[#64131C] text-[#FAF8F5] text-[11px] sm:text-xs font-mono uppercase tracking-wider inline-flex items-center gap-1.5 transition-colors cursor-pointer"
               >
                 <Github className="w-3.5 h-3.5" />
                 <span>Source Code</span>
@@ -985,48 +1113,48 @@ const OfflineDocumentAdvisorCard: React.FC = () => {
 }
 
 /* =========================================================================
-   CASE 05: LAPTOP CARE (SECONDARY COMMERCIAL CASE STUDY MONOGRAPH)
+   CASE 05: LAPTOP CARE (INTEGRATED INTO 5-CARD CONTINUOUS STACK)
    ========================================================================= */
-const LaptopCareShowcase: React.FC = () => {
+const LaptopCareCard: React.FC<{ onOpenContact?: () => void }> = ({ onOpenContact }) => {
   return (
-    <div className="relative w-full rounded-[24px] sm:rounded-[32px] md:rounded-[36px] border border-[#171615]/10 bg-white text-[#171615] p-5 sm:p-7 md:p-9 lg:p-11 shadow-[0_20px_50px_-15px_rgba(23,22,21,0.06)] overflow-hidden">
+    <div className="flex flex-col justify-between h-full w-full overflow-y-auto lg:overflow-hidden pr-0.5">
       {/* 1. Header: Project Number + Title + Domain Badge */}
-      <div className="flex flex-wrap items-baseline justify-between gap-3 pb-4 sm:pb-5 border-b border-[#171615]/10">
+      <div className="flex flex-wrap items-baseline justify-between gap-3 pb-3 sm:pb-4 border-b border-[#171615]/10 shrink-0">
         <div className="flex items-baseline gap-3 sm:gap-4">
           <span className="font-mono text-2xl sm:text-4xl font-black text-[#64131C] tracking-tighter">
             05
           </span>
-          <h3 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tight text-[#171615]">
+          <h3 className="text-xl sm:text-3xl md:text-4xl font-black uppercase tracking-tight text-[#171615]">
             LAPTOP CARE
           </h3>
         </div>
-        <span className="text-xs font-mono uppercase tracking-widest text-[#6E6A64]">
+        <span className="text-[10px] sm:text-xs font-mono uppercase tracking-widest text-[#6E6A64]">
           HARDWARE DIAGNOSTIC LAB PLATFORM · KANPUR &amp; PRAYAGRAJ · OCT 2026 — PRESENT
         </span>
       </div>
 
-      {/* Main Grid: Responsive Ordering (Mobile: Image First -> Text; Desktop: Text Left -> Image Right) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-10 xl:gap-12 mt-6 sm:mt-8 items-center">
+      {/* Main Grid: Responsive Ordering */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8 xl:gap-10 items-stretch mt-3 sm:mt-5 flex-1 min-h-0">
         {/* PRIMARY VISUAL ARTIFACT (Order-1 on Mobile, Order-2 on Desktop) */}
-        <div className="order-1 lg:order-2 lg:col-span-7">
-          <div className="rounded-2xl border border-[#171615]/10 bg-[#FAF8F5] overflow-hidden shadow-sm flex flex-col">
+        <div className="order-1 lg:order-2 lg:col-span-7 flex flex-col justify-center min-h-0">
+          <div className="rounded-xl sm:rounded-2xl border border-[#171615]/10 bg-[#FAF8F5] overflow-hidden shadow-2xs flex flex-col h-full justify-between">
             {/* macOS Chrome Header */}
-            <div className="px-3.5 py-2 sm:py-2.5 bg-[#F0EDE4] border-b border-[#171615]/10 flex items-center justify-between gap-2">
+            <div className="px-3 sm:px-3.5 py-1.5 sm:py-2.5 bg-[#F0EDE4] border-b border-[#171615]/10 flex items-center justify-between gap-2 shrink-0">
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#171615]/20 inline-block" />
-                <span className="w-2.5 h-2.5 rounded-full bg-[#171615]/20 inline-block" />
-                <span className="w-2.5 h-2.5 rounded-full bg-[#171615]/20 inline-block" />
-                <span className="ml-2 font-mono text-[10px] text-[#6E6A64] tracking-wider uppercase">
+                <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-[#171615]/20 inline-block" />
+                <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-[#171615]/20 inline-block" />
+                <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-[#171615]/20 inline-block" />
+                <span className="ml-2 font-mono text-[9px] sm:text-[10px] text-[#6E6A64] tracking-wider uppercase">
                   laptopcare.service // HARDWARE LAB ONLINE
                 </span>
               </div>
-              <div className="px-2 py-0.5 rounded bg-white text-[9px] font-mono uppercase tracking-widest text-[#171615] font-bold border border-[#171615]/10">
+              <div className="px-2 py-0.5 rounded bg-white text-[8px] sm:text-[9px] font-mono uppercase tracking-widest text-[#171615] font-bold border border-[#171615]/10">
                 LIVE PRODUCTION
               </div>
             </div>
 
             {/* Platform Screenshot */}
-            <div className="relative aspect-[16/10] sm:aspect-[16/9.5] w-full bg-[#171615] overflow-hidden group">
+            <div className="relative aspect-[16/9.5] w-full bg-[#171615] overflow-hidden group flex-1 min-h-[140px] sm:min-h-[220px]">
               <img
                 src="/projects/laptopcare-platform.webp"
                 alt="Laptop Care live production diagnostic platform"
@@ -1036,13 +1164,13 @@ const LaptopCareShowcase: React.FC = () => {
                 loading="lazy"
                 className="w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-[1.02]"
               />
-              <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded bg-[#171615]/80 backdrop-blur-md text-[9px] font-mono uppercase tracking-widest text-[#FAF8F5] border border-white/10">
+              <div className="absolute top-2 right-2 px-1.5 sm:px-2 py-0.5 rounded bg-[#171615]/80 backdrop-blur-md text-[8px] sm:text-[9px] font-mono uppercase tracking-widest text-[#FAF8F5] border border-white/10">
                 3D DIAGNOSTIC INTAKE
               </div>
             </div>
 
             {/* Editorial Caption Bar */}
-            <div className="px-3.5 py-2 bg-white border-t border-[#171615]/8 flex items-center justify-between text-[11px] font-mono text-[#6E6A64]">
+            <div className="px-3 py-1.5 sm:py-2 bg-white border-t border-[#171615]/8 flex items-center justify-between text-[10px] sm:text-[11px] font-mono text-[#6E6A64] shrink-0">
               <span className="truncate pr-2">
                 Fig 5.1 — Laptop Care 3D hardware diagnostic intake and live customer repair tracking platform.
               </span>
@@ -1052,27 +1180,27 @@ const LaptopCareShowcase: React.FC = () => {
         </div>
 
         {/* NARRATIVE & SPECIFICATIONS (Order-2 on Mobile, Order-1 on Desktop) */}
-        <div className="order-2 lg:order-1 lg:col-span-5 flex flex-col justify-between h-full">
+        <div className="order-2 lg:order-1 lg:col-span-5 flex flex-col justify-between">
           <div>
-            <p className="text-base sm:text-xl font-bold uppercase tracking-tight text-[#171615] leading-snug">
+            <p className="text-xs sm:text-base md:text-lg font-bold uppercase tracking-tight text-[#171615] leading-snug">
               “High-performance hardware diagnostic lab &amp; customer repair tracking ledger.”
             </p>
 
-            <div className="space-y-4 mt-5 sm:mt-6 pt-4 sm:pt-5 border-t border-[#171615]/8">
+            <div className="space-y-2.5 sm:space-y-3.5 mt-2.5 sm:mt-3.5 pt-2.5 sm:pt-3.5 border-t border-[#171615]/8">
               <div>
-                <span className="font-mono text-[10px] uppercase tracking-widest text-[#6E6A64] font-bold block mb-1">
+                <span className="font-mono text-[9px] sm:text-[10px] uppercase tracking-widest text-[#6E6A64] font-bold block mb-0.5">
                   01 // PROBLEM: OPAQUE HARDWARE SERVICE
                 </span>
-                <p className="text-xs sm:text-sm text-[#171615] leading-relaxed">
+                <p className="text-xs text-[#171615] leading-relaxed">
                   Independent diagnostic labs in Kanpur and Prayagraj process hundreds of motherboard and chip-level repairs monthly. Customers suffer from ambiguous diagnostic quotes, lost repair tickets, and lack of component provenance.
                 </p>
               </div>
 
               <div>
-                <span className="font-mono text-[10px] uppercase tracking-widest text-[#64131C] font-bold block mb-1">
+                <span className="font-mono text-[9px] sm:text-[10px] uppercase tracking-widest text-[#64131C] font-bold block mb-0.5">
                   02 // ARCHITECTURE: 60-120 FPS DIRECT-DOM PLATFORM
                 </span>
-                <p className="text-xs sm:text-sm text-[#171615] leading-relaxed">
+                <p className="text-xs text-[#171615] leading-relaxed">
                   Engineered and deployed a production web platform featuring 3D hardware diagnostics, interactive reels, and zero-rerender DOM physics. Custom GSAP ticker and RAF direct-DOM physics engines eliminate React state re-renders for fluid 60-120 FPS performance.
                 </p>
               </div>
@@ -1080,29 +1208,42 @@ const LaptopCareShowcase: React.FC = () => {
           </div>
 
           {/* Performance & Metrics Badges */}
-          <div className="mt-5 sm:mt-6 pt-4 sm:pt-5 border-t border-[#171615]/10">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center font-mono text-xs mb-3.5">
-              <div className="p-2 rounded-lg bg-[#FAF8F5] border border-[#171615]/8">
-                <span className="font-black text-[#171615] block text-sm">60-120</span>
-                <span className="text-[10px] text-[#6E6A64]">FPS MOTION</span>
+          <div className="mt-3 sm:mt-4 pt-2.5 sm:pt-3.5 border-t border-[#171615]/10">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 text-center font-mono text-xs mb-2.5 sm:mb-3">
+              <div className="p-1 sm:p-1.5 rounded-lg bg-[#FAF8F5] border border-[#171615]/8">
+                <span className="font-black text-[#171615] block text-xs sm:text-sm">60-120</span>
+                <span className="text-[8px] sm:text-[9px] text-[#6E6A64]">FPS MOTION</span>
               </div>
-              <div className="p-2 rounded-lg bg-[#FAF8F5] border border-[#171615]/8">
-                <span className="font-black text-emerald-800 block text-sm">0</span>
-                <span className="text-[10px] text-[#6E6A64]">RERENDERS</span>
+              <div className="p-1 sm:p-1.5 rounded-lg bg-[#FAF8F5] border border-[#171615]/8">
+                <span className="font-black text-emerald-800 block text-xs sm:text-sm">0</span>
+                <span className="text-[8px] sm:text-[9px] text-[#6E6A64]">RERENDERS</span>
               </div>
-              <div className="p-2 rounded-lg bg-[#FAF8F5] border border-[#171615]/8">
-                <span className="font-black text-[#171615] block text-sm">100%</span>
-                <span className="text-[10px] text-[#6E6A64]">RESPONSIVE</span>
+              <div className="p-1 sm:p-1.5 rounded-lg bg-[#FAF8F5] border border-[#171615]/8">
+                <span className="font-black text-[#171615] block text-xs sm:text-sm">100%</span>
+                <span className="text-[8px] sm:text-[9px] text-[#6E6A64]">RESPONSIVE</span>
               </div>
-              <div className="p-2 rounded-lg bg-[#FAF8F5] border border-[#171615]/8">
-                <span className="font-black text-[#64131C] block text-sm">2 CITIES</span>
-                <span className="text-[10px] text-[#6E6A64]">LABS ACTIVE</span>
+              <div className="p-1 sm:p-1.5 rounded-lg bg-[#FAF8F5] border border-[#171615]/8">
+                <span className="font-black text-[#64131C] block text-xs sm:text-sm">2 CITIES</span>
+                <span className="text-[8px] sm:text-[9px] text-[#6E6A64]">LABS ACTIVE</span>
               </div>
             </div>
 
-            <div className="text-xs font-mono text-[#171615] flex flex-wrap gap-2">
-              <span className="text-[#64131C] font-bold">STACK:</span>
-              <span>React 19 · TypeScript · Vite · Tailwind CSS · GSAP · Framer Motion · Lenis</span>
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#171615]/8">
+              <div className="text-[10px] sm:text-[11px] font-mono text-[#171615] flex flex-wrap gap-1">
+                <span className="text-[#64131C] font-bold">STACK:</span>
+                <span>React 19 · TypeScript · Vite · Tailwind · GSAP · Lenis</span>
+              </div>
+
+              {onOpenContact && (
+                <button
+                  type="button"
+                  onClick={onOpenContact}
+                  className="px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-[#171615] hover:bg-[#64131C] text-[#FAF8F5] text-[11px] sm:text-xs font-mono uppercase tracking-wider inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <span>Discuss System</span>
+                  <ArrowUpRight className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
           </div>
         </div>

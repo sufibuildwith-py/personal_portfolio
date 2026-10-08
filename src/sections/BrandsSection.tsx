@@ -1,8 +1,8 @@
 import React from 'react'
-import { Terminal, CheckCircle2 } from 'lucide-react'
-import { FadeIn } from '../components/FadeIn'
+import { Terminal } from 'lucide-react'
+import { useDraggableInfiniteReel } from '../hooks/useDraggableInfiniteReel'
 
-interface ToolchainRow {
+interface ToolchainItem {
   number: string
   primary: string
   secondary: string
@@ -11,13 +11,13 @@ interface ToolchainRow {
   invariants: string
 }
 
-const TOOLCHAIN_ITEMS: ToolchainRow[] = [
+const ROW_1_ITEMS: ToolchainItem[] = [
   {
     number: '01',
     primary: 'JAVA 21',
     secondary: 'SPRING BOOT 3',
     category: 'BACKEND ARCHITECTURE',
-    role: 'Enterprise services, security filters, transactional outbox, and idempotent APIs.',
+    role: 'Enterprise services, transactional outbox, and idempotent APIs.',
     invariants: 'Zero Dual-Write Failures · Strict Webhook Verification',
   },
   {
@@ -25,7 +25,7 @@ const TOOLCHAIN_ITEMS: ToolchainRow[] = [
     primary: 'POSTGRESQL 18',
     secondary: 'TYPESCRIPT',
     category: 'PERSISTENCE & SCHEMAS',
-    role: 'Double-entry financial ledgers, Row Level Security (FORCE RLS), and Flyway migrations.',
+    role: 'Double-entry financial ledgers, Row Level Security (FORCE RLS), and Flyway.',
     invariants: 'Strict Multi-Tenant Isolation · Tamper-Evident Ledgers',
   },
   {
@@ -33,7 +33,7 @@ const TOOLCHAIN_ITEMS: ToolchainRow[] = [
     primary: 'REACT 19',
     secondary: 'NEXT.JS 14',
     category: 'CLIENT CONTROL PLANES',
-    role: 'High-performance control surfaces, server components, and direct-DOM compositor motion.',
+    role: 'High-performance control surfaces, server components, and direct-DOM motion.',
     invariants: '60-120 FPS Compositor Physics · Zero State Thrash',
   },
   {
@@ -41,7 +41,7 @@ const TOOLCHAIN_ITEMS: ToolchainRow[] = [
     primary: 'PYTHON',
     secondary: 'DOCKER',
     category: 'AI & INFRASTRUCTURE',
-    role: 'Agentic reasoning evaluation harnesses, reproducible containers, and multi-arch deployments.',
+    role: 'Agentic reasoning evaluation harnesses, reproducible containers.',
     invariants: '10k+ Automated Benchmarks · Reproducible Isolation',
   },
   {
@@ -49,15 +49,18 @@ const TOOLCHAIN_ITEMS: ToolchainRow[] = [
     primary: 'TAURI 2',
     secondary: 'ELECTRON',
     category: 'DESKTOP RUNTIMES',
-    role: 'Packaged offline desktop applications, bundled machine learning models, and native IPC.',
+    role: 'Packaged offline desktop apps, bundled ML models, and native IPC.',
     invariants: '100% Offline Capability · Self-Contained Installers',
   },
+]
+
+const ROW_2_ITEMS: ToolchainItem[] = [
   {
     number: '06',
     primary: 'WEBSOCKETS',
     secondary: 'STOMP PROTOCOL',
     category: 'STREAMING & TELEMETRY',
-    role: 'Bi-directional messaging, consent-based crew telemetry, and instant lock release.',
+    role: 'Bi-directional messaging, consent-based crew telemetry, instant lock.',
     invariants: 'Low-Latency Distribution · Automated Reconnection',
   },
   {
@@ -65,15 +68,15 @@ const TOOLCHAIN_ITEMS: ToolchainRow[] = [
     primary: 'LOCAL AI / EVE',
     secondary: 'QWEN RERANKER',
     category: 'INTELLIGENCE LAYER',
-    role: '2-stage semantic reranking, grounded retrieval, and deterministic policy governors.',
-    invariants: 'AI Proposes · Deterministic Engines Decide',
+    role: '2-stage semantic reranking, grounded retrieval, policy governors.',
+    invariants: 'AI Proposes · Deterministic Policy Gates Decide',
   },
   {
     number: '08',
     primary: 'REDIS',
     secondary: 'CACHING LEDGER',
     category: 'DISTRIBUTED DATA',
-    role: 'Ephemeral leases, token-bucket rate limiters, and high-throughput session state.',
+    role: 'Ephemeral leases, token-bucket rate limiters, session state.',
     invariants: 'Sub-millisecond Access · Distributed Locks',
   },
   {
@@ -81,27 +84,86 @@ const TOOLCHAIN_ITEMS: ToolchainRow[] = [
     primary: 'C++',
     secondary: 'CORE CS',
     category: 'SYSTEMS FOUNDATIONS',
-    role: 'Algorithmic complexity, memory management, operating system primitives, and network protocols.',
+    role: 'Algorithmic complexity, memory management, OS primitives, networks.',
     invariants: 'Deterministic Resource Bounds · Algorithmic Rigor',
   },
 ]
 
 export const BrandsSection: React.FC = () => {
+  // Row 1: 01 -> 05 moves LEFT -> RIGHT (direction: 'right')
+  const topReel = useDraggableInfiniteReel({
+    direction: 'right',
+    speedDesktop: 22,
+    speedMobile: 18,
+    gapFallback: 16,
+  })
+
+  // Row 2: 06 <- 09 moves RIGHT -> LEFT (direction: 'left')
+  const bottomReel = useDraggableInfiniteReel({
+    direction: 'left',
+    speedDesktop: 22,
+    speedMobile: 18,
+    gapFallback: 16,
+  })
+
+  // Duplicate items within a set to ensure continuous coverage on wide screens
+  const topItems = [...ROW_1_ITEMS, ...ROW_1_ITEMS]
+  const bottomItems = [...ROW_2_ITEMS, ...ROW_2_ITEMS]
+
+  const renderToolchainCard = (item: ToolchainItem, idx: number, keyPrefix: string) => (
+    <div
+      key={`${keyPrefix}-${item.number}-${idx}`}
+      className="w-[280px] sm:w-[340px] md:w-[390px] lg:w-[420px] shrink-0"
+    >
+      <div className="h-full rounded-xl sm:rounded-2xl bg-white hover:bg-[#FAF8F5] border border-[#171615]/10 hover:border-[#64131C]/30 p-3 sm:p-3.5 md:p-4 shadow-2xs transition-colors duration-200 flex flex-col justify-between select-none">
+        {/* Top Row: Index, Primary | Secondary, Category Badge */}
+        <div className="flex items-baseline justify-between gap-2">
+          <div className="flex items-baseline gap-2 min-w-0">
+            <span className="font-mono text-xs sm:text-sm font-black text-[#64131C] shrink-0 tracking-tight">
+              {item.number}
+            </span>
+            <span className="text-xs sm:text-sm font-black uppercase tracking-tight text-[#171615] truncate">
+              {item.primary}
+            </span>
+            <span className="text-[11px] sm:text-xs text-[#171615]/25">|</span>
+            <span className="text-[11px] sm:text-xs font-bold uppercase tracking-tight text-[#6E6A64] truncate">
+              {item.secondary}
+            </span>
+          </div>
+          <span className="font-mono text-[9px] uppercase tracking-widest text-[#64131C] font-semibold shrink-0">
+            {item.category.split(' ')[0]}
+          </span>
+        </div>
+
+        {/* Bottom Row: Role & Invariant Dot */}
+        <div className="mt-1.5 flex items-center justify-between gap-2 text-[10px] sm:text-[11px] text-[#6E6A64] font-mono leading-tight">
+          <p className="truncate text-[#171615]/80 font-sans text-[11px] sm:text-xs">
+            {item.role}
+          </p>
+          <span
+            className="w-1.5 h-1.5 rounded-full bg-emerald-600 shrink-0"
+            title={item.invariants}
+          />
+        </div>
+      </div>
+    </div>
+  )
+
   return (
     <section
       id="stack"
-      className="relative w-full bg-[#F5F2EA] text-[#171615] py-20 sm:py-28 overflow-hidden border-t border-[#171615]/10 select-none"
+      className="relative w-full bg-[#F5F2EA] text-[#171615] py-14 sm:py-20 overflow-hidden border-t border-[#171615]/10 select-none"
       aria-label="Core Engineering Toolchain and Production Ecosystem"
     >
-      <div className="max-w-7xl mx-auto px-5 sm:px-8 md:px-12">
+      <div className="max-w-7xl mx-auto px-5 sm:px-8 md:px-12 mb-6 sm:mb-8">
         {/* Section Header */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-12 sm:pb-16 border-b border-[#171615]/10">
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 pb-6 sm:pb-8 border-b border-[#171615]/10">
           <div>
-            <div className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-[#64131C] mb-3 font-semibold">
+            <div className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-[#64131C] mb-2 font-semibold">
               <Terminal className="w-3.5 h-3.5" />
               <span>07 // TOOLCHAIN</span>
             </div>
-            <h2 className="text-3xl sm:text-5xl md:text-6xl font-black uppercase tracking-tight text-[#171615] leading-[1.06]">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black uppercase tracking-tight text-[#171615] leading-[1.06]">
               CORE TECHNOLOGIES.{' '}
               <br className="hidden sm:inline" />
               <span className="font-serif italic font-normal text-[#64131C] lowercase tracking-normal">
@@ -111,78 +173,93 @@ export const BrandsSection: React.FC = () => {
           </div>
           <div className="max-w-md lg:text-right">
             <p className="text-xs sm:text-sm text-[#6E6A64] font-normal leading-relaxed">
-              Every technology is selected for determinism, verifiable type safety, and real-world operational resilience under production failure modes.
+              Every technology is selected for determinism, verifiable type safety, and real-world operational resilience.
             </p>
-            <div className="mt-3 flex items-center lg:justify-end gap-2 text-[11px] font-mono text-[#64131C] font-semibold">
-              <span>9 PRODUCTION PLATFORMS</span>
+            <div className="mt-2 flex items-center lg:justify-end gap-2 text-[10px] sm:text-[11px] font-mono text-[#64131C] font-semibold">
+              <span>01 → 05 CORE RUNTIMES</span>
               <span className="text-[#171615]/20">·</span>
-              <span>ZERO VAPORWARE</span>
+              <span>06 ← 09 TELEMETRY &amp; SYSTEMS</span>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Editorial Typography Catalogue (Directly on Canvas with Hairline Rules) */}
-        <div className="divide-y divide-[#171615]/10">
-          {TOOLCHAIN_ITEMS.map((item, idx) => (
-            <FadeIn
-              key={item.number}
-              delay={idx * 0.04}
-              y={15}
-              className="group py-6 sm:py-8 grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-8 items-baseline hover:bg-[#FAF8F5]/80 transition-colors duration-200 px-3 sm:px-4 -mx-3 sm:-mx-4 rounded-xl"
-            >
-              {/* Col 1: Index Number */}
-              <div className="md:col-span-1 flex items-center gap-3">
-                <span className="font-mono text-xs font-bold text-[#64131C] tracking-wider">
-                  {item.number}
-                </span>
-                <span className="md:hidden font-mono text-[10px] uppercase tracking-widest text-[#6E6A64]">
-                  {item.category}
-                </span>
-              </div>
+      {/* =========================================================================
+          ROW 1: 01 -> 05 (Flows continuously LEFT -> RIGHT)
+          ========================================================================= */}
+      <div
+        ref={topReel.viewportRef}
+        onPointerDown={topReel.handlePointerDown}
+        onPointerMove={topReel.handlePointerMove}
+        onPointerUp={topReel.handlePointerUp}
+        onPointerCancel={topReel.handlePointerUp}
+        style={{ touchAction: 'pan-y' }}
+        className={`relative w-full overflow-hidden py-1 sm:py-1.5 ${
+          topReel.isDragging ? 'cursor-grabbing' : 'cursor-grab'
+        }`}
+        aria-label="Core Runtimes: Java, PostgreSQL, React, Python, Tauri (Left to Right)"
+      >
+        <div className="pointer-events-none absolute inset-y-0 left-0 w-12 sm:w-20 md:w-28 bg-gradient-to-r from-[#F5F2EA] to-transparent z-10" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-12 sm:w-20 md:w-28 bg-gradient-to-l from-[#F5F2EA] to-transparent z-10" />
 
-              {/* Col 2: Typographic Pair (JAVA | SPRING BOOT) */}
-              <div className="md:col-span-5 flex flex-col">
-                <div className="flex items-baseline flex-wrap gap-x-3 gap-y-1">
-                  <h3 className="text-xl sm:text-2xl lg:text-3xl font-black uppercase tracking-tight text-[#171615] group-hover:text-[#64131C] transition-colors">
-                    {item.primary}
-                  </h3>
-                  <span className="text-lg sm:text-xl font-light text-[#171615]/30">|</span>
-                  <h4 className="text-lg sm:text-xl lg:text-2xl font-bold uppercase tracking-tight text-[#6E6A64] group-hover:text-[#171615] transition-colors">
-                    {item.secondary}
-                  </h4>
-                </div>
-                <span className="hidden md:block mt-1 font-mono text-[10px] uppercase tracking-widest text-[#64131C] font-semibold">
-                  {item.category}
-                </span>
-              </div>
-
-              {/* Col 3: Role & Production Scope */}
-              <div className="md:col-span-4">
-                <p className="text-xs sm:text-sm text-[#171615] font-normal leading-relaxed">
-                  {item.role}
-                </p>
-              </div>
-
-              {/* Col 4: Verified Invariant Badge */}
-              <div className="md:col-span-2 flex md:justify-end items-center">
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white border border-[#171615]/8 text-[10px] font-mono text-[#6E6A64] group-hover:border-[#64131C]/20 transition-colors shadow-2xs">
-                  <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
-                  <span className="truncate">{item.invariants}</span>
-                </div>
-              </div>
-            </FadeIn>
-          ))}
+        <div
+          ref={topReel.trackRef}
+          className="flex gap-3 sm:gap-3.5 will-change-transform w-max items-stretch"
+        >
+          <div className="flex gap-3 sm:gap-3.5 shrink-0 items-stretch" aria-hidden="true">
+            {topItems.map((item, idx) => renderToolchainCard(item, idx, 'top-set0'))}
+          </div>
+          <div ref={topReel.singleSetRef} className="flex gap-3 sm:gap-3.5 shrink-0 items-stretch">
+            {topItems.map((item, idx) => renderToolchainCard(item, idx, 'top-set1'))}
+          </div>
+          <div className="flex gap-3 sm:gap-3.5 shrink-0 items-stretch" aria-hidden="true">
+            {topItems.map((item, idx) => renderToolchainCard(item, idx, 'top-set2'))}
+          </div>
         </div>
+      </div>
 
-        {/* Bottom Ledger Colophon */}
-        <div className="mt-12 pt-6 border-t border-[#171615]/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-[#6E6A64]">
-          <div className="flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
-            <span>ALL TECHNOLOGIES VERIFIED IN LIVE PRODUCTION OR AUTOMATED HARNESSES</span>
+      {/* =========================================================================
+          ROW 2: 06 <- 09 (Flows continuously RIGHT -> LEFT)
+          ========================================================================= */}
+      <div
+        ref={bottomReel.viewportRef}
+        onPointerDown={bottomReel.handlePointerDown}
+        onPointerMove={bottomReel.handlePointerMove}
+        onPointerUp={bottomReel.handlePointerUp}
+        onPointerCancel={bottomReel.handlePointerUp}
+        style={{ touchAction: 'pan-y' }}
+        className={`relative w-full overflow-hidden py-1 sm:py-1.5 mt-2.5 sm:mt-3 ${
+          bottomReel.isDragging ? 'cursor-grabbing' : 'cursor-grab'
+        }`}
+        aria-label="Streaming & Systems: WebSockets, Local AI, Redis, C++ (Right to Left)"
+      >
+        <div className="pointer-events-none absolute inset-y-0 left-0 w-12 sm:w-20 md:w-28 bg-gradient-to-r from-[#F5F2EA] to-transparent z-10" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-12 sm:w-20 md:w-28 bg-gradient-to-l from-[#F5F2EA] to-transparent z-10" />
+
+        <div
+          ref={bottomReel.trackRef}
+          className="flex gap-3 sm:gap-3.5 will-change-transform w-max items-stretch"
+        >
+          <div className="flex gap-3 sm:gap-3.5 shrink-0 items-stretch" aria-hidden="true">
+            {bottomItems.map((item, idx) => renderToolchainCard(item, idx, 'bottom-set0'))}
           </div>
-          <div>
-            <span>DETERMINISTIC EVALUATION · TYPE SAFETY · IMMUTABLE TRUTH</span>
+          <div ref={bottomReel.singleSetRef} className="flex gap-3 sm:gap-3.5 shrink-0 items-stretch">
+            {bottomItems.map((item, idx) => renderToolchainCard(item, idx, 'bottom-set1'))}
           </div>
+          <div className="flex gap-3 sm:gap-3.5 shrink-0 items-stretch" aria-hidden="true">
+            {bottomItems.map((item, idx) => renderToolchainCard(item, idx, 'bottom-set2'))}
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Colophon Strip */}
+      <div className="max-w-7xl mx-auto px-5 sm:px-8 md:px-12 mt-6 sm:mt-8 pt-4 border-t border-[#171615]/10 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] font-mono text-[#6E6A64]">
+        <div className="flex items-center gap-2">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+          <span>ALL TECHNOLOGIES VERIFIED IN LIVE PRODUCTION OR AUTOMATED HARNESSES</span>
+        </div>
+        <div className="flex items-center gap-1.5 text-[#64131C] font-semibold">
+          <span>↔ DRAG REELS TO INSPECT</span>
         </div>
       </div>
     </section>
